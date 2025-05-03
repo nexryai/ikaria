@@ -44,7 +44,6 @@ typedef struct Stream {
   int level;
   int width;
   int height;
-  int channels;
   int sample_rate;
   int frame_size;
   std::vector<Tag> tags;
@@ -163,7 +162,6 @@ FileInfoResponse get_file_info(const std::string filename) {
         .level = (int)pLocalCodecParameters->level,
         .width = (int)pLocalCodecParameters->width,
         .height = (int)pLocalCodecParameters->height,
-        .channels = (int)pLocalCodecParameters->channels,
         .sample_rate = (int)pLocalCodecParameters->sample_rate,
         .frame_size = (int)pLocalCodecParameters->frame_size,
       };
@@ -215,132 +213,6 @@ FileInfoResponse get_file_info(const std::string filename) {
     return r;
 }
 
-FramesResponse get_frames(std::string filename, int timestamp) {
-    av_log_set_level(AV_LOG_QUIET); // No logging output for libav.
-
-    FILE *file = fopen(filename.c_str(), "rb");
-    if (!file) {
-      printf("cannot open file\n");
-    }
-    fclose(file);
-
-    AVFormatContext *pFormatContext = avformat_alloc_context();
-    if (!pFormatContext) {
-      printf("ERROR: could not allocate memory for Format Context\n");
-    }
-
-    // Open the file and read header.
-    int ret;
-    if ((ret = avformat_open_input(&pFormatContext, filename.c_str(), NULL, NULL)) < 0) {
-        printf("ERROR: %s\n", av_err2str(ret));
-    }
-
-    // Get stream info from format.
-    if (avformat_find_stream_info(pFormatContext, NULL) < 0) {
-      printf("ERROR: could not get stream info\n");
-    }
-
-    // Get streams data.
-    AVCodec  *pCodec = NULL;
-    AVCodecParameters *pCodecParameters = NULL;
-    int video_stream_index = -1;
-    int nb_frames = 0;
-
-    // Loop through the streams.
-    for (int i = 0; i < pFormatContext->nb_streams; i++) {
-      AVCodecParameters *pLocalCodecParameters = NULL;
-      pLocalCodecParameters = pFormatContext->streams[i]->codecpar;
-
-      // Print out the decoded frame info.
-      AVCodec *pLocalCodec = avcodec_find_decoder(pLocalCodecParameters->codec_id);
-      if (pLocalCodecParameters->codec_type == AVMEDIA_TYPE_VIDEO) {
-        if (video_stream_index == -1) {
-          video_stream_index = i;
-          nb_frames = pFormatContext->streams[i]->nb_frames;
-
-          // Calculate the nb_frames for MKV/WebM if nb_frames is 0.
-          if (nb_frames == 0) {
-            nb_frames = (pFormatContext->duration / 1000000) * pFormatContext->streams[i]->avg_frame_rate.num;
-          }
-          pCodec = pLocalCodec;
-          pCodecParameters = pLocalCodecParameters;
-        }
-      }
-    }
-
-    AVRational stream_time_base = pFormatContext->streams[video_stream_index]->time_base;
-    AVRational avg_frame_rate = pFormatContext->streams[video_stream_index]->avg_frame_rate;
-    // printf("stream_time_base: %d / %d = %.5f\n", stream_time_base.num, stream_time_base.den, av_q2d(stream_time_base));
-
-    FramesResponse r;
-    r.nb_frames = nb_frames;
-    r.time_base = av_q2d(stream_time_base);
-    r.avg_frame_rate = av_q2d(avg_frame_rate);
-    r.duration = pFormatContext->streams[video_stream_index]->duration;
-
-    // If the duration value isn't in the stream, get from the FormatContext.
-    if (r.duration == 0) {
-      r.duration = pFormatContext->duration * r.time_base;
-    }
-
-    AVCodecContext *pCodecContext = avcodec_alloc_context3(pCodec);
-    avcodec_parameters_to_context(pCodecContext, pCodecParameters);
-    avcodec_open2(pCodecContext, pCodec, NULL);
-
-    AVPacket *pPacket = av_packet_alloc();
-    AVFrame *pFrame = av_frame_alloc();
-
-    int max_packets_to_process = 1000;
-    int frame_count = 0;
-    int key_frames = 0;
-
-    // Seek to frame from the given timestamp.
-    av_seek_frame(pFormatContext, video_stream_index, timestamp, AVSEEK_FLAG_ANY);
-
-    // Read video frames.
-    while (av_read_frame(pFormatContext, pPacket) >= 0) {
-      if (pPacket->stream_index == video_stream_index) {
-          int response = 0;
-          response = avcodec_send_packet(pCodecContext, pPacket);
-
-          if (response >= 0) {
-            response = avcodec_receive_frame(pCodecContext, pFrame);
-            if (response == AVERROR(EAGAIN) || response == AVERROR_EOF) {
-              continue;
-            }
-
-            // Track keyframes so we paginate by each GOP.
-            if (pFrame->key_frame == 1) key_frames++;
-
-            // Break at the next keyframe found.
-            if (key_frames > 1) break;
-
-            Frame f = {
-              .frame_number = frame_count,
-              .pict_type = (char) av_get_picture_type_char(pFrame->pict_type),
-              .pts = (int) pPacket->pts,
-              .dts = (int) pPacket->dts,
-              .pos = (int) pPacket->pos,
-              .pkt_size = pFrame->pkt_size,
-            };
-            r.frames.push_back(f);
-
-            if (--max_packets_to_process <= 0) break;
-          }
-        frame_count++;
-      }
-      av_packet_unref(pPacket);
-    }
-    r.gop_size = frame_count;
-
-    avformat_close_input(&pFormatContext);
-    av_packet_free(&pPacket);
-    av_frame_free(&pFrame);
-    avcodec_free_context(&pCodecContext);
-
-    return r;
-}
-
 double getDurationFromPTS(AVFormatContext* fmt_ctx) {
     double max_pts_time = 0.0;
     AVPacket pkt;
@@ -364,8 +236,10 @@ double getDurationFromPTS(AVFormatContext* fmt_ctx) {
 VideoInfoResponse getVideoInfo(const std::string filename) {
     avformat_network_init();
     AVFormatContext* fmt_ctx = nullptr;
-    if (avformat_open_input(&fmt_ctx, filename.c_str(), NULL, NULL) < 0) {
-        printf("fail to open file\n");
+
+    int err;
+    if ((err = avformat_open_input(&fmt_ctx, filename.c_str(), NULL, NULL)) < 0) {
+        printf("failed to open file: %s\n", av_err2str(err));
         throw std::runtime_error("ファイルを開けませんでした");
     }
 
@@ -437,7 +311,6 @@ EMSCRIPTEN_BINDINGS(structs) {
   .field("level", &Stream::level)
   .field("width", &Stream::width)
   .field("height", &Stream::height)
-  .field("channels", &Stream::channels)
   .field("sample_rate", &Stream::sample_rate)
   .field("frame_size", &Stream::frame_size)
   .field("tags", &Stream::tags)
@@ -474,16 +347,6 @@ EMSCRIPTEN_BINDINGS(structs) {
   .field("chapters", &FileInfoResponse::chapters)
   ;
   function("get_file_info", &get_file_info);
-
-  emscripten::value_object<FramesResponse>("FramesResponse")
-  .field("frames", &FramesResponse::frames)
-  .field("nb_frames", &FramesResponse::nb_frames)
-  .field("gop_size", &FramesResponse::gop_size)
-  .field("duration", &FramesResponse::duration)
-  .field("time_base", &FramesResponse::time_base)
-  .field("avg_frame_rate", &FramesResponse::avg_frame_rate)
-  ;
-  function("get_frames", &get_frames);
   
   emscripten::value_object<KeyFrame>("KeyFrame")
   .field("pts_time", &KeyFrame::pts_time)

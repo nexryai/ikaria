@@ -1,16 +1,13 @@
 FROM emscripten/emsdk:4.0.8 as build
 
-ARG FFMPEG_VERSION=7.1.1
-ARG LIBVPX_VERSION=1.15.1
-ARG OPUS_VERSION=1.5.2
-ARG LAME_VERSION=3.100 
-
 ARG PREFIX=/opt/ffmpeg
 ARG MAKEFLAGS="-j4"
 
 RUN apt-get update && apt-get install -y autoconf libtool build-essential
 
 # libvpx
+ARG LIBVPX_VERSION=1.15.1
+
 RUN cd /tmp && git clone https://chromium.googlesource.com/webm/libvpx && \
   cd libvpx && \
   git checkout v${LIBVPX_VERSION} && \
@@ -28,6 +25,8 @@ RUN cd /tmp/libvpx && \
   emmake make && emmake make install
 
 # opus
+ARG OPUS_VERSION=1.5.2
+
 # ref: https://github.com/ffmpegwasm/ffmpeg.wasm/blob/efac2471225bf7b3dc7f394886437f394a74f0c9/build/opus.sh
 RUN cd /tmp && git clone https://github.com/xiph/opus && \
   cd opus && \
@@ -48,6 +47,8 @@ RUN cd /tmp/opus && \
   emmake make && emmake make install
 
 # libmp3lame
+ARG LAME_VERSION=3.100 
+
 RUN cd /tmp && \
   wget -O lame-${LAME_VERSION}.tar.gz https://sourceforge.net/projects/lame/files/lame/${LAME_VERSION}/lame-${LAME_VERSION}.tar.gz/download && \
   tar zxf lame-${LAME_VERSION}.tar.gz
@@ -63,6 +64,8 @@ RUN cd /tmp/lame-${LAME_VERSION} && \
   emmake make && emmake make install 
 
 # Get ffmpeg source.
+ARG FFMPEG_VERSION=7.1.1
+
 RUN cd /tmp/ && \
   wget http://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.gz && \
   tar zxf ffmpeg-${FFMPEG_VERSION}.tar.gz && rm ffmpeg-${FFMPEG_VERSION}.tar.gz
@@ -93,7 +96,7 @@ RUN cd /tmp/ffmpeg-${FFMPEG_VERSION} && \
   --enable-postproc \
   --enable-swscale \
   --enable-protocol=file \
-  --enable-decoder=h264,aac,pcm_s16le,mp3 \
+  --enable-decoder=aac,pcm_s16le,mp3 \
   --enable-demuxer=mov,matroska,mp3 \
   --enable-muxer=mp4 \
   --enable-gpl \
@@ -106,7 +109,7 @@ RUN cd /tmp/ffmpeg-${FFMPEG_VERSION} && \
   --nm="llvm-nm -g" \
   --ar=emar \
   --as=llvm-as \
-  --ranlib=llvm-ranlib \
+  --ranlib=emranlib \
   --cc=emcc \
   --cxx=em++ \
   --objcc=emcc \

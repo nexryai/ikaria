@@ -1,6 +1,7 @@
 FROM emscripten/emsdk:3.1.15 as build
 
 ARG FFMPEG_VERSION=4.3.1
+ARG LIBVPX_VERSION=1.15.1
 ARG X264_VERSION=20170226-2245-stable
 ARG LAME_VERSION=3.100 
 
@@ -8,6 +9,23 @@ ARG PREFIX=/opt/ffmpeg
 ARG MAKEFLAGS="-j4"
 
 RUN apt-get update && apt-get install -y autoconf libtool build-essential
+
+# libvpx
+RUN cd /tmp && git clone https://chromium.googlesource.com/webm/libvpx && \
+  cd libvpx && \
+  git checkout v${LIBVPX_VERSION} && \
+  emconfigure ./configure \
+  --target=generic-gnu \
+  --prefix=${PREFIX} \
+  --disable-examples \
+  --disable-unit-tests \
+  --disable-install-bins \
+  --disable-tools \
+  --disable-docs \
+  --enable-pic
+
+RUN cd /tmp/libvpx && \
+  emmake make && emmake make install
 
 # libx264
 RUN cd /tmp && \

@@ -115,6 +115,8 @@ RUN cd /tmp/ffmpeg-${FFMPEG_VERSION} && \
   --enable-demuxer=mov,matroska,mp3 \
   --enable-muxer=mp4 \
   --enable-gpl \
+  --enable-libvpx \
+  --enable-libopus \
   --enable-libx264 \
   --enable-libmp3lame \
   --extra-cflags="$CFLAGS" \

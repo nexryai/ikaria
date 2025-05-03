@@ -10,8 +10,6 @@
       </div>
     </b-navbar>
 
-    <GitHubCorner />
-
     <div id="app" class="container">
       <File />
     </div>
@@ -31,14 +29,12 @@
 
 <script>
 import { name, version } from '../package.json';
-import GitHubCorner from './components/GitHubCorner.vue';
 import File from './components/File.vue';
 
 export default {
   name: 'App',
   components: {
     File,
-    GitHubCorner,
   },
   data() {
     return {

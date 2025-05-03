@@ -56,7 +56,7 @@
         <b-tabs class="mt-4" v-model="tabIndex">
           <b-tab title="Overview" class="mt-2">
             <div v-if="data">
-              <Overview :info="data" />
+              <code>{{ JSON.stringify(data) }}</code>
             </div>
           </b-tab>
           <b-tab v-if="file.type !== 'audio/mpeg'" title="Frames" class="mt-2" lazy>
@@ -68,13 +68,11 @@
 </template>
 
 <script>
-import Overview from './Overview.vue';
 import Frames from './Frames.vue';
 
 export default {
   name: 'File',
   components: {
-    Overview,
     Frames,
   },
   data() {

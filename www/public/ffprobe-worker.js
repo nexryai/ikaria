@@ -13,28 +13,11 @@ onmessage = (e) => {
             FS.mount(WORKERFS, { files: [file] }, '/work');
 
             // Call the wasm module.
-            const info = Module.get_file_info('/work/' + file.name);
+            const info = Module.getVideoInfo('/work/' + file.name);
 
-            // Remap streams into collection.
-            const s = [];
-            for (let i = 0; i < info.streams.size(); i++) {
-                const tags = {};
-                for (let j = 0; j < info.streams.get(i).tags.size(); j++) {
-                    const t = info.streams.get(i).tags.get(j);
-                    tags[t.key] = t.value;
-                }
-                s.push({...info.streams.get(i), ...{ tags}});
-            }
-
-            // Remap chapters into collection.
-            const c = [];
-            for (let i = 0; i < info.chapters.size(); i++) {
-                const tags = {};
-                for (let j = 0; j < info.chapters.get(i).tags.size(); j++) {
-                    const t = info.chapters.get(i).tags.get(j);
-                    tags[t.key] = t.value;
-                }
-                c.push({...info.chapters.get(i), ...{tags}});
+            const keyframes = [];
+            for (let i = 0; i < info.keyframes.size(); i++) {
+                keyframes.push(info.keyframes.get(i).pts_time);
             }
 
             const versions = {
@@ -46,10 +29,11 @@ onmessage = (e) => {
             // Send back data response.
             data = {
                 ...info,
-                streams: s,
-                chapters: c,
+                keyframes: keyframes,
                 versions,
             }
+
+            console.log('Worker: File info', data);
             postMessage(data);
 
             // Cleanup mount.

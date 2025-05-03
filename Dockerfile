@@ -3,7 +3,6 @@ FROM emscripten/emsdk:4.0.8 as build
 ARG FFMPEG_VERSION=7.1.1
 ARG LIBVPX_VERSION=1.15.1
 ARG OPUS_VERSION=1.5.2
-ARG X264_VERSION=20170226-2245-stable
 ARG LAME_VERSION=3.100 
 
 ARG PREFIX=/opt/ffmpeg
@@ -47,23 +46,6 @@ RUN cd /tmp && git clone https://github.com/xiph/opus && \
 
 RUN cd /tmp/opus && \
   emmake make && emmake make install
-
-# libx264
-RUN cd /tmp && \
-  wget https://download.videolan.org/pub/videolan/x264/snapshots/x264-snapshot-${X264_VERSION}.tar.bz2 && \
-  tar xvfj x264-snapshot-${X264_VERSION}.tar.bz2
-
-RUN cd /tmp/x264-snapshot-${X264_VERSION} && \
-  emconfigure ./configure \
-  --prefix=${PREFIX} \
-  --host=i686-gnu \
-  --enable-static \
-  --disable-cli \
-  --disable-asm \
-  --extra-cflags="-s USE_PTHREADS=1"
-
-RUN cd /tmp/x264-snapshot-${X264_VERSION} && \
-  emmake make && emmake make install 
 
 # libmp3lame
 RUN cd /tmp && \
@@ -117,7 +99,6 @@ RUN cd /tmp/ffmpeg-${FFMPEG_VERSION} && \
   --enable-gpl \
   --enable-libvpx \
   --enable-libopus \
-  --enable-libx264 \
   --enable-libmp3lame \
   --extra-cflags="$CFLAGS" \
   --extra-cxxflags="$CFLAGS" \

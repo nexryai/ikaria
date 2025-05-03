@@ -88,7 +88,21 @@ typedef struct FramesResponse {
   double avg_frame_rate;
 } FramesResponse;
 
-FileInfoResponse get_file_info(std::string filename) {
+typedef struct KeyFrame {
+  double pts_time;
+} KeyFrame;
+
+typedef struct VideoInfoResponse {
+    double duration;
+    int width;
+    int height;
+    std::string videoCodec;
+    std::string audioCodec;
+    std::vector<KeyFrame> keyframes;
+} VideoInfoResponse;
+
+FileInfoResponse get_file_info(const std::string filename) {
+    // printf("File: %s\n", filename.c_str());
     av_log_set_level(AV_LOG_QUIET); // No logging output for libav.
 
     FILE *file = fopen(filename.c_str(), "rb");
@@ -327,6 +341,77 @@ FramesResponse get_frames(std::string filename, int timestamp) {
     return r;
 }
 
+double getDurationFromPTS(AVFormatContext* fmt_ctx) {
+    double max_pts_time = 0.0;
+    AVPacket pkt;
+    av_init_packet(&pkt);
+
+    while (av_read_frame(fmt_ctx, &pkt) >= 0) {
+        AVStream* stream = fmt_ctx->streams[pkt.stream_index];
+
+        if (pkt.pts != AV_NOPTS_VALUE) {
+            double pts_time = pkt.pts * av_q2d(stream->time_base);
+            max_pts_time = std::max(max_pts_time, pts_time);
+        }
+        av_packet_unref(&pkt);
+    }
+
+    // シークで巻き戻す
+    av_seek_frame(fmt_ctx, -1, 0, AVSEEK_FLAG_BACKWARD);
+    return max_pts_time;
+}
+
+VideoInfoResponse getVideoInfo(const std::string filename) {
+    avformat_network_init();
+    AVFormatContext* fmt_ctx = nullptr;
+    if (avformat_open_input(&fmt_ctx, filename.c_str(), NULL, NULL) < 0) {
+        printf("fail to open file\n");
+        throw std::runtime_error("ファイルを開けませんでした");
+    }
+
+    if (avformat_find_stream_info(fmt_ctx, nullptr) < 0) {
+        avformat_close_input(&fmt_ctx);
+        printf("ERROR: could not find stream information\n");
+        throw std::runtime_error("ストリーム情報を取得できませんでした");
+    }
+
+
+    VideoInfoResponse info;
+    info.duration = (fmt_ctx->duration != AV_NOPTS_VALUE)
+                    ? (double)fmt_ctx->duration / AV_TIME_BASE
+                    : getDurationFromPTS(fmt_ctx);
+
+    for (unsigned i = 0; i < fmt_ctx->nb_streams; ++i) {
+        AVStream* stream = fmt_ctx->streams[i];
+        AVCodecParameters* codecpar = stream->codecpar;
+
+        if (codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+            info.videoCodec = avcodec_get_name(codecpar->codec_id);
+            info.width = codecpar->width;
+            info.height = codecpar->height;
+
+            // キーフレーム取得
+            AVPacket pkt;
+            av_init_packet(&pkt);
+            while (av_read_frame(fmt_ctx, &pkt) >= 0) {
+                if (pkt.stream_index == static_cast<int>(i)) {
+                    if (pkt.flags & AV_PKT_FLAG_KEY && pkt.pts != AV_NOPTS_VALUE) {
+                        double pts_time = pkt.pts * av_q2d(stream->time_base);
+                        info.keyframes.push_back({pts_time});
+                    }
+                }
+                av_packet_unref(&pkt);
+            }
+            av_seek_frame(fmt_ctx, -1, 0, AVSEEK_FLAG_BACKWARD);
+        } else if (codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            info.audioCodec = avcodec_get_name(codecpar->codec_id);
+        }
+    }
+
+    avformat_close_input(&fmt_ctx);
+    return info;
+}
+
 EMSCRIPTEN_BINDINGS(constants) {
     function("avformat_version", &c_avformat_version);
     function("avcodec_version", &c_avcodec_version);
@@ -399,4 +484,20 @@ EMSCRIPTEN_BINDINGS(structs) {
   .field("avg_frame_rate", &FramesResponse::avg_frame_rate)
   ;
   function("get_frames", &get_frames);
+  
+  emscripten::value_object<KeyFrame>("KeyFrame")
+  .field("pts_time", &KeyFrame::pts_time)
+  ;
+  register_vector<KeyFrame>("KeyFrame");
+
+  emscripten::value_object<VideoInfoResponse>("VideoInfoResponse")
+  .field("duration", &VideoInfoResponse::duration)
+  .field("width", &VideoInfoResponse::width)
+  .field("height", &VideoInfoResponse::height)
+  .field("videoCodec", &VideoInfoResponse::videoCodec)
+  .field("audioCodec", &VideoInfoResponse::audioCodec)
+  .field("keyframes", &VideoInfoResponse::keyframes)
+  ;
+
+  function("getVideoInfo", &getVideoInfo);
 }

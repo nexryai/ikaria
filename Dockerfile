@@ -2,6 +2,7 @@ FROM emscripten/emsdk:3.1.15 as build
 
 ARG FFMPEG_VERSION=4.3.1
 ARG LIBVPX_VERSION=1.15.1
+ARG OPUS_VERSION=1.5.2
 ARG X264_VERSION=20170226-2245-stable
 ARG LAME_VERSION=3.100 
 
@@ -25,6 +26,26 @@ RUN cd /tmp && git clone https://chromium.googlesource.com/webm/libvpx && \
   --enable-pic
 
 RUN cd /tmp/libvpx && \
+  emmake make && emmake make install
+
+# opus
+# ref: https://github.com/ffmpegwasm/ffmpeg.wasm/blob/efac2471225bf7b3dc7f394886437f394a74f0c9/build/opus.sh
+RUN cd /tmp && git clone https://github.com/xiph/opus && \
+  cd opus && \
+  git checkout v${OPUS_VERSION} && \
+  emconfigure ./autogen.sh && \
+  emconfigure ./configure \
+  --prefix=${PREFIX} \
+  --host=i686-none \
+  --enable-static \
+  --disable-shared \
+  --disable-asm \
+  --disable-rtcd \
+  --disable-intrinsics \
+  --disable-doc \
+  --disable-extra-programs
+
+RUN cd /tmp/opus && \
   emmake make && emmake make install
 
 # libx264

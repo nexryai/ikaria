@@ -272,7 +272,7 @@ VideoInfoResponse getVideoInfo(const std::string filename) {
                 if (pkt.stream_index == static_cast<int>(i)) {
                     if (pkt.flags & AV_PKT_FLAG_KEY && pkt.pts != AV_NOPTS_VALUE) {
                         const double pts_time = pkt.pts * av_q2d(stream->time_base);
-                        printf("Key frame found at pts_time: %f\n", pts_time);
+                        // printf("Key frame found at pts_time: %f\n", pts_time);
                         
                         // JavaScript側で扱いやすいようにstringに変換
                         // ffprobeのCLIの出力と同じ、"0.000000" 形式にする

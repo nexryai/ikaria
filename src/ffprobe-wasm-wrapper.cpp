@@ -87,9 +87,9 @@ typedef struct FramesResponse {
   double avg_frame_rate;
 } FramesResponse;
 
-typedef struct KeyFrame {
+typedef struct Keyframe {
   double pts_time;
-} KeyFrame;
+} Keyframe;
 
 typedef struct VideoInfoResponse {
     double duration;
@@ -97,7 +97,7 @@ typedef struct VideoInfoResponse {
     int height;
     std::string videoCodec;
     std::string audioCodec;
-    std::vector<KeyFrame> keyframes;
+    std::vector<Keyframe> keyframes;
 } VideoInfoResponse;
 
 FileInfoResponse get_file_info(const std::string filename) {
@@ -271,6 +271,7 @@ VideoInfoResponse getVideoInfo(const std::string filename) {
                 if (pkt.stream_index == static_cast<int>(i)) {
                     if (pkt.flags & AV_PKT_FLAG_KEY && pkt.pts != AV_NOPTS_VALUE) {
                         double pts_time = pkt.pts * av_q2d(stream->time_base);
+                        // printf("Key frame found at pts_time: %f\n", pts_time);
                         info.keyframes.push_back({pts_time});
                     }
                 }
@@ -348,10 +349,10 @@ EMSCRIPTEN_BINDINGS(structs) {
   ;
   function("get_file_info", &get_file_info);
   
-  emscripten::value_object<KeyFrame>("KeyFrame")
-  .field("pts_time", &KeyFrame::pts_time)
+  emscripten::value_object<Keyframe>("Keyframe")
+  .field("pts_time", &Keyframe::pts_time)
   ;
-  register_vector<KeyFrame>("KeyFrame");
+  register_vector<Keyframe>("Keyframe");
 
   emscripten::value_object<VideoInfoResponse>("VideoInfoResponse")
   .field("duration", &VideoInfoResponse::duration)

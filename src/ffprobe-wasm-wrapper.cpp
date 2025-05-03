@@ -89,6 +89,7 @@ typedef struct FramesResponse {
 
 typedef struct Keyframe {
   double pts_time;
+  std::string pts_time_string;
 } Keyframe;
 
 typedef struct VideoInfoResponse {
@@ -270,9 +271,19 @@ VideoInfoResponse getVideoInfo(const std::string filename) {
             while (av_read_frame(fmt_ctx, &pkt) >= 0) {
                 if (pkt.stream_index == static_cast<int>(i)) {
                     if (pkt.flags & AV_PKT_FLAG_KEY && pkt.pts != AV_NOPTS_VALUE) {
-                        double pts_time = pkt.pts * av_q2d(stream->time_base);
-                        // printf("Key frame found at pts_time: %f\n", pts_time);
-                        info.keyframes.push_back({pts_time});
+                        const double pts_time = pkt.pts * av_q2d(stream->time_base);
+                        printf("Key frame found at pts_time: %f\n", pts_time);
+                        
+                        // JavaScript側で扱いやすいようにstringに変換
+                        // ffprobeのCLIの出力と同じ、"0.000000" 形式にする
+                        static char buffer[64];
+                        snprintf(buffer, sizeof(buffer), "%.6f", pts_time);
+                        std::string pts_time_string(buffer);
+                        
+                        info.keyframes.push_back({
+                            .pts_time = pts_time,
+                            .pts_time_string = pts_time_string
+                        });
                     }
                 }
                 av_packet_unref(&pkt);
@@ -351,6 +362,7 @@ EMSCRIPTEN_BINDINGS(structs) {
   
   emscripten::value_object<Keyframe>("Keyframe")
   .field("pts_time", &Keyframe::pts_time)
+  .field("pts_time_string", &Keyframe::pts_time_string)
   ;
   register_vector<Keyframe>("Keyframe");
 

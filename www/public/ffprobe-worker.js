@@ -17,7 +17,7 @@ onmessage = (e) => {
 
             const keyframes = [];
             for (let i = 0; i < info.keyframes.size(); i++) {
-                keyframes.push(info.keyframes.get(i).pts_time);
+                keyframes.push(info.keyframes.get(i).pts_time_string);
             }
 
             const versions = {

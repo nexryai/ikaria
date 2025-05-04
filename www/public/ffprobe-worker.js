@@ -12,8 +12,14 @@ onmessage = (e) => {
             }
             FS.mount(WORKERFS, { files: [file] }, '/work');
 
+            Module.trimingWebM('/work/' + file.name, '/trimed_' + file.name, "0", "20.000000");
+
+            const trimmedFileBuffer = FS.readFile('/trimed_' + file.name);
+            const trimmedFile = new Blob([trimmedFileBuffer], { type: file.type });
+            const blobUrl = URL.createObjectURL(trimmedFile);
+
             // Call the wasm module.
-            const info = Module.getVideoInfo('/work/' + file.name);
+            const info = Module.getVideoInfo('/trimed_' + file.name);
 
             const keyframes = [];
             for (let i = 0; i < info.keyframes.size(); i++) {
@@ -31,6 +37,7 @@ onmessage = (e) => {
                 ...info,
                 keyframes: keyframes,
                 versions,
+                blobUrl
             }
 
             console.log('Worker: File info', data);

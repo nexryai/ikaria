@@ -57,6 +57,7 @@
           <b-tab title="Overview" class="mt-2">
             <div v-if="data">
               <code>{{ JSON.stringify(data) }}</code>
+              <video :src="data.blobUrl" style="width: 100%" controls></video>
             </div>
           </b-tab>
           <b-tab v-if="file.type !== 'audio/mpeg'" title="Frames" class="mt-2" lazy>

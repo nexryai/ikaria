@@ -121,7 +121,7 @@ RUN cd /tmp/ffmpeg-${FFMPEG_VERSION} && \
   emmake make install
 
 
-COPY ./src/ffprobe-wasm-wrapper.cpp /build/src/ffprobe-wasm-wrapper.cpp
+COPY ./src/*.cpp /build/src/
 COPY ./Makefile /build/Makefile
 
 WORKDIR /build

@@ -1,4 +1,4 @@
-dist/ffprobe-wasm.js:
+js/ikaria-wasm.js:
 	mkdir -p dist && \
 	emcc --bind \
 	-O3 \
@@ -10,5 +10,9 @@ dist/ffprobe-wasm.js:
 	-lavcodec -lavformat -lavfilter -lavdevice -lswresample -lswscale -lavutil -lm \
 	-pthread \
 	-lworkerfs.js \
-	-o dist/ffprobe-wasm.js \
-	src/ffprobe-wasm-wrapper.cpp
+	-o js/ikaria-wasm.js \
+	src/ikaria.cpp
+
+clean:
+	rm -rf js/ikaria-wasm.js
+	rm -rf js/ikaria-wasm.wasm

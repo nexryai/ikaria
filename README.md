@@ -1,4 +1,4 @@
-## `FFProbe Wasm`
+## `ikaria (Ikaria.js)`
 WIP: ffmpegとffprobeを利用した、WASMで動作するGPL/特許フリーのメディア処理ライブラリ
 
 
@@ -14,7 +14,6 @@ rm -rf dist && docker-compose run --build ffprobe-wasm make && cp -a dist/. www/
 ```
 
 #### Debug UI にアクセス
-Vue2で動いてるのでそのうち更新したい
 ```
 cd www
 pnpm install

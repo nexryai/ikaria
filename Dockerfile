@@ -3,7 +3,7 @@ FROM emscripten/emsdk:4.0.8 as build
 ARG PREFIX=/opt/ffmpeg
 ARG MAKEFLAGS="-j4"
 
-RUN apt-get update && apt-get install -y autoconf libtool build-essential
+RUN apt-get update && apt-get install -y autoconf libtool build-essential npm && npm install -g typescript
 
 # libvpx
 ARG LIBVPX_VERSION=1.15.1
@@ -126,4 +126,5 @@ COPY ./Makefile /build/Makefile
 
 WORKDIR /build
 
+ENV PATH="${PATH}:/opt/ffmpeg/bin"
 RUN make

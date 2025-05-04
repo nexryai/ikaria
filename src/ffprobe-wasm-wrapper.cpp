@@ -298,6 +298,134 @@ VideoInfoResponse getVideoInfo(const std::string filename) {
     return info;
 }
 
+void trimingWebM(const std::string inputFilePath, const std::string outputFilePath, const std::string start_time, const std::string end_time) {
+    AVFormatContext* ctx = nullptr;
+    
+    int err;
+    if ((err = avformat_open_input(&ctx, inputFilePath.c_str(), nullptr, nullptr)) < 0) {
+        printf("failed to open file: %s\n", av_err2str(err));
+        throw std::runtime_error("ファイルを開けませんでした");
+    }
+
+    if (avformat_find_stream_info(ctx, nullptr) < 0) {
+        avformat_close_input(&ctx);
+        printf("ERROR: could not find stream information\n");
+        throw std::runtime_error("ストリーム情報を取得できませんでした");
+    }
+
+    // 出力ファイルの初期化
+    AVFormatContext* out_ctx = nullptr;
+    if ((err = avformat_alloc_output_context2(&out_ctx, nullptr, nullptr, outputFilePath.c_str())) < 0) {
+        printf("ERROR: could not allocate output context\n");
+        throw std::runtime_error("出力ファイルの初期化に失敗しました");
+    }
+
+    // ストリームのコピー
+    printf("Copying streams parameters...\n");
+    for (unsigned i = 0; i < ctx->nb_streams; ++i) {
+        AVStream* in_stream = ctx->streams[i];
+        AVStream* out_stream = avformat_new_stream(out_ctx, nullptr);
+        if (!out_stream) {
+            printf("ERROR: could not allocate stream\n");
+            throw std::runtime_error("ストリームのコピーに失敗しました");
+        }
+
+        printf("Stream %d: codec_type=%d, codec_name=%s\n", i, in_stream->codecpar->codec_type, avcodec_get_name(in_stream->codecpar->codec_id));
+
+        avcodec_parameters_copy(out_stream->codecpar, in_stream->codecpar);
+        out_stream->time_base = in_stream->time_base;
+    }
+
+    // 出力ファイルを開く
+    if (!(out_ctx->oformat->flags & AVFMT_NOFILE)) {
+        if ((err = avio_open(&out_ctx->pb, outputFilePath.c_str(), AVIO_FLAG_WRITE)) < 0) {
+            printf("failed to open output file: %s\n", av_err2str(err));
+            throw std::runtime_error("出力ファイルを開けませんでした");
+        }
+    }
+
+    // ヘッダを書き込む
+    if ((err = avformat_write_header(out_ctx, nullptr)) < 0) {
+        printf("ERROR: could not write header\n");
+        throw std::runtime_error("ヘッダの書き込みに失敗しました");
+    }
+
+    // ストリームのトリミング
+    // 秒からPTSに変換
+    //int64_t start_time_pts = std::stod(start_time) * AV_TIME_BASE;
+    //int64_t end_time_pts = std::stod(end_time) * AV_TIME_BASE;
+    
+    // printf("Trimming from %s to %s (pts: %lld to %lld)\n", start_time.c_str(), end_time.c_str(), start_time_pts, end_time_pts);
+
+    for (unsigned i = 0; i < ctx->nb_streams; ++i) {
+        AVStream* in_stream = ctx->streams[i];
+        AVStream* out_stream = out_ctx->streams[i];
+
+        // const double pts_time = pkt.pts * av_q2d(stream->time_base); で生成したPTSが渡されるので復元
+        const int64_t start_time_pts = std::stod(start_time) / av_q2d(in_stream->time_base);
+        const int64_t end_time_pts = std::stod(end_time) / av_q2d(in_stream->time_base);
+        printf("Trimming from %s to %s (pts: %lld to %lld)\n", start_time.c_str(), end_time.c_str(), start_time_pts, end_time_pts);
+
+        printf("Trimming Stream %d: codec_type=%d, codec_name=%s\n", i, in_stream->codecpar->codec_type, avcodec_get_name(in_stream->codecpar->codec_id));
+
+        int copied_pkts = 0;
+
+        // ストリームの開始時間を設定
+        if (av_seek_frame(ctx, i, start_time_pts, AVSEEK_FLAG_BACKWARD) < 0) {
+            printf("ERROR: could not seek to start time\n");
+            throw std::runtime_error("開始時間のシークに失敗しました");
+        }
+
+        // パケットの読み込みと書き込み
+        AVPacket pkt;
+        while (av_read_frame(ctx, &pkt) >= 0) {
+            if (pkt.stream_index == static_cast<int>(i)) {
+                if (pkt.pts >= start_time_pts && pkt.pts <= end_time_pts) {
+                    // パケットのPTS/DTSを更新
+                    pkt.pts = av_rescale_q(pkt.pts, in_stream->time_base, out_stream->time_base);
+                    pkt.dts = av_rescale_q(pkt.dts, in_stream->time_base, out_stream->time_base);
+                    pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
+                    pkt.pos = -1;
+
+                    // パケットを書き込む
+                    if ((err = av_interleaved_write_frame(out_ctx, &pkt)) < 0) {
+                        printf("ERROR: could not write frame\n");
+                        throw std::runtime_error("フレームの書き込みに失敗しました");
+                    }
+
+                    copied_pkts++;
+                }
+                
+                // 終了時間を超えたらループを抜ける
+                if (pkt.pts > end_time_pts) {
+                    break;
+                }
+
+                av_packet_unref(&pkt);
+            }
+        }
+
+        printf("Copied %d packets from stream %d\n", copied_pkts, i);
+    }
+
+    // ヘッダを書き込む
+    printf("Writing trailer...\n");
+    if ((err = av_write_trailer(out_ctx)) < 0) {
+        printf("ERROR: could not write trailer\n");
+        throw std::runtime_error("トレーラーの書き込みに失敗しました");
+    }
+
+    // 出力ファイルを閉じる
+    if (out_ctx->pb) {
+        avio_closep(&out_ctx->pb);
+    }
+
+    avformat_free_context(out_ctx);
+    avformat_close_input(&ctx);
+
+    return;
+}
+
 EMSCRIPTEN_BINDINGS(constants) {
     function("avformat_version", &c_avformat_version);
     function("avcodec_version", &c_avcodec_version);
@@ -376,4 +504,6 @@ EMSCRIPTEN_BINDINGS(structs) {
   ;
 
   function("getVideoInfo", &getVideoInfo);
+
+  function("trimingWebM", &trimingWebM);
 }

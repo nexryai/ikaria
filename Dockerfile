@@ -97,8 +97,9 @@ RUN cd /tmp/ffmpeg-${FFMPEG_VERSION} && \
   --enable-swscale \
   --enable-protocol=file \
   --enable-decoder=aac,pcm_s16le,mp3 \
-  --enable-demuxer=mov,matroska,mp3 \
-  --enable-muxer=mp4 \
+  # `ffmpeg -formats` で確認できるmuxer,demuxerを指定
+  --enable-demuxer=mov,matroska,mp3,webm \
+  --enable-muxer=mp4,webm \
   --enable-gpl \
   --enable-libvpx \
   --enable-libopus \

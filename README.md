@@ -1,57 +1,28 @@
-# `FFProbe Wasm`
-> A Web-based FFProbe. Powered by FFmpeg, Vue and Web Assembly!
+## `FFProbe Wasm`
+WIP: ffmpegとffprobeを利用した、WASMで動作するGPL/特許フリーのメディア処理ライブラリ
 
-https://ffprobe-wasm.netlify.app/
 
-## Development
-`ffprobe-wasm` uses [emscripten](https://emscripten.org/) to compile [FFmpeg](https://ffmpeg.org)'s [libav](https://ffmpeg.org/doxygen/4.1/index.html) to [Web Assembly](https://webassembly.org/) via [Docker](https://www.docker.com/).
+### Development
 
-Emscripten is also used to create and compile the Wasm bindings to be imported by the browser.
-
-### Requirements
-* `nodejs` - https://nodejs.org/en/download/
-* `docker` - https://docs.docker.com/desktop/
-
-### Setup 
-* Clone project and build the Wasm module via Docker:
+#### ビルド
 ```
-docker-compose run ffprobe-wasm make
+# 通常のビルド
+rm -rf dist && docker-compose run ffprobe-wasm make && cp -a dist/. www/public/
+
+# Dockerfile変更時
+rm -rf dist && docker-compose run --build ffprobe-wasm make && cp -a dist/. www/public/
 ```
 
-This will build the Wasm module and place it into the `/dist` directory.
-
-* Copy the JS and Wasm modules into `www/public/`:
-```
-cp -a dist/. www/public/
-```
-
-* Install and run the web application:
+#### Debug UI にアクセス
+Vue2で動いてるのでそのうち更新したい
 ```
 cd www
-npm install
-npm run serve
+pnpm install
+pnpm serve
 ```
 
-* Load `http://localhost:8080/` in the web browser.
-
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Deploy
-Builds and deploys to `gh-pages` branch.
-
-However, I am hosting on [Netlify](https://netlify.com) to enable [SharedArrayBuffer](https://caniuse.com/sharedarraybuffer) support via the [required CORS headers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer).
-```
-npm run deploy
-```
-
-### Resources
-* https://ffmpeg.org/doxygen/4.1/index.html
-* https://emscripten.org/
-* https://vuejs.org
-* https://bootstrap-vue.org
-
-## License
-MIT
+### Legal
+本ライブラリで使用しているffmpegは`--disable-gpl`フラグを使用してビルドしているため、このライブラリのリンクによってGPLの派生条項が適用されることはないと本ライブラリの開発者は認識しています。  
+またH.264などの一般的に特許が絡むとされているコーデックのデコーダー/エンコーダーもリンクしておらず、本ライブラリはそれらのコーデックに対応していません。  
+ただしこれらは本ライブラリの使用によって発生した法的な問題の責任を利用者が回避できるということではありません。  
+このライブラリの利用によって発生したいかなる損害（法的責任の追求、訴訟などを含む）に対しても、本ライブラリの開発者、コントリビューター、所属団体、ライセンサーは一切の責任を負わないものとします。

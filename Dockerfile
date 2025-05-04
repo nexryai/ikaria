@@ -100,7 +100,7 @@ RUN cd /tmp/ffmpeg-${FFMPEG_VERSION} && \
   # `ffmpeg -formats` で確認できるmuxer,demuxerを指定
   --enable-demuxer=mov,matroska,mp3,webm \
   --enable-muxer=mp4,webm \
-  --enable-gpl \
+  --disable-gpl \
   --enable-libvpx \
   --enable-libopus \
   --enable-libmp3lame \

@@ -6,3 +6,5 @@ node_modules
 src/*-wasm.js
 src/*-wasm.wasm
 src/*-wasm.d.ts
+
+tests/*.webm

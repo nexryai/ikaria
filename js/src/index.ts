@@ -1,4 +1,17 @@
-const worker = new Worker(new URL("./worker-browser.js", import.meta.url))
+
+const isNode = (): boolean => {
+    return typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+};
+
+let WorkerThreads: any;
+if (isNode()) {
+    WorkerThreads = import('worker_threads').then((module) => {
+        return module.Worker;
+    });
+}
+
+const browserWorker = isNode() ? null : new window.Worker(new URL("./worker-browser", import.meta.url), { type: 'module' });
+const nodeWorker = isNode() ? new WorkerThreads(new URL("./worker-node.js", import.meta.url)) : null
 
 type Keyframe = {
     pts_time: number;
@@ -14,8 +27,13 @@ type VideoInfo = {
 }
 
 export const getFileInfo = async (file: File): Promise<VideoInfo> => {
+    if (!browserWorker) {
+        throw new Error('This function can only be used in a browser environment.');
+    }
+
     return new Promise((resolve, reject) => {
-        worker.onmessage = (e: MessageEvent) => {
+        browserWorker.onmessage = (e: MessageEvent) => {
+            console.log('Worker: Received message', e.data);
             const data = e.data;
             if (data.error) {
                 reject(data.error);
@@ -23,6 +41,21 @@ export const getFileInfo = async (file: File): Promise<VideoInfo> => {
                 resolve(data);
             }
         };
-        worker.postMessage(['get_file_info', file]);
+
+        console.log('Worker: Sending file info request', file);
+        browserWorker.postMessage(['get_file_info', file]);
     });
 };
+
+export const getFileInfoFromPath = async (filePath: string): Promise<VideoInfo> => {
+    if (!nodeWorker) {
+        throw new Error('This function can only be used in a Node.js environment.');
+    }
+
+    return new Promise((resolve, reject) => {
+        nodeWorker.on('message', (data: VideoInfo) => {
+            resolve(data);
+        });
+        nodeWorker.postMessage({ type: 'get_file_info', filePath });
+    });
+}

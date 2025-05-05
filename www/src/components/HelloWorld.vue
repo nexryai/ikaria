@@ -69,7 +69,7 @@
 import { ref, computed } from 'vue';
 import { showToast } from 'vant';
 
-import { getFileInfo } from '../../../js/dist';
+import { getFileInfo } from '../../../js/src';
 
 const protocol = ref('file');
 const file = ref<File | null>(null);
@@ -112,7 +112,7 @@ async function onFile(fileObj: any) {
   console.log("onFile", fileObj);
   const selected = fileObj.file as File;
   file.value = selected;
-  console.log(await getFileInfo(selected));
+  await getFileInfo(selected);
   console.log("Done");
 }
 

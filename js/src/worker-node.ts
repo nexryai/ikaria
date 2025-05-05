@@ -1,11 +1,12 @@
+import { parentPort } from 'worker_threads';
 import Ikaria from './ikaria-wasm.js';
 
-console.log('Worker: Starting worker');
 
-self.onmessage = async (e: MessageEvent) => {
-    console.log('Worker: Received message', e.data);
-    const type = e.data[0];
-    const file = e.data[1];
+parentPort!.on('message', async msg => {
+    const { type, filePath } = msg;
+
+    const parentDir = filePath.substring(0, filePath.lastIndexOf('/'));
+    const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
 
     let data;
 
@@ -17,16 +18,18 @@ self.onmessage = async (e: MessageEvent) => {
             if (!ikaria.FS.analyzePath('/work', false).exists) {
                 ikaria.FS.mkdir('/work');
             }
-            ikaria.FS.mount("WORKERFS", { files: [file] }, '/work');
+            ikaria.FS.mount("NODEFS", {
+                // mount parent directory of the file path
+                root: parentDir,
 
-            ikaria.trimingWebM('/work/' + file.name, '/trimed_' + file.name, "0", "20.000000");
+            }, '/work');
 
-            const trimmedFileBuffer = ikaria.FS.readFile('/trimed_' + file.name);
-            const trimmedFile = new Blob([trimmedFileBuffer], { type: file.type });
-            const blobUrl = URL.createObjectURL(trimmedFile);
+            ikaria.trimingWebM('/work/' + fileName, '/trimed_' + fileName, "0", "20.000000");
+
+            const trimmedFileBuffer = ikaria.FS.readFile('/trimed_' + fileName);
 
             // Call the wasm module.
-            const info = ikaria.getVideoInfo('/trimed_' + file.name);
+            const info = ikaria.getVideoInfo('/trimed_' + fileName);
 
             const keyframes = [];
             // ref: https://github.com/emscripten-core/emscripten/issues/11070
@@ -47,7 +50,7 @@ self.onmessage = async (e: MessageEvent) => {
                 ...info,
                 keyframes: keyframes,
                 versions,
-                blobUrl
+                trimmedFileBuffer,
             }
 
             console.log('Worker: File info', data);
@@ -62,6 +65,6 @@ self.onmessage = async (e: MessageEvent) => {
             break;
     }
 
-}
+});
 
 // self.importScripts('ikaria-wasm.js'); // Load ffprobe into worker context.

@@ -17,7 +17,8 @@ self.onmessage = async (e: MessageEvent) => {
             if (!ikaria.FS.analyzePath('/work', false).exists) {
                 ikaria.FS.mkdir('/work');
             }
-            ikaria.FS.mount("WORKERFS", { files: [file] }, '/work');
+
+            ikaria.FS.mount(ikaria.FS.filesystems.WORKERFS, { files: [file] }, '/work');
 
             ikaria.trimingWebM('/work/' + file.name, '/trimed_' + file.name, "0", "20.000000");
 

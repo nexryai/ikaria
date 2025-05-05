@@ -5,7 +5,7 @@
   "license": "MIT",
   "description": "A JavaScript library for media processing using FFmpeg and WebAssembly.",
   "scripts": {
-    "build": "rm -rf dist && tsc && cp ikaria-wasm.wasm dist/"
+    "build": "rm -rf dist && tsc && cp src/ikaria-wasm.wasm dist/"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

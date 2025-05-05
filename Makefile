@@ -1,4 +1,4 @@
-js/ikaria-wasm.js:
+js/src/ikaria-wasm.js:
 	mkdir -p dist && \
 	emcc --bind \
 	-O3 \
@@ -10,9 +10,9 @@ js/ikaria-wasm.js:
 	-lavcodec -lavformat -lavfilter -lavdevice -lswresample -lswscale -lavutil -lm \
 	-pthread \
 	-lworkerfs.js \
-	-o js/ikaria-wasm.js \
+	-o js/src/ikaria-wasm.js \
 	src/ikaria.cpp
 
 clean:
-	rm -rf js/ikaria-wasm.js
-	rm -rf js/ikaria-wasm.wasm
+	rm -f js/src/ikaria-wasm.js
+	rm -f js/src/ikaria-wasm.wasm

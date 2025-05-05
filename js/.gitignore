@@ -3,6 +3,6 @@ node_modules
 
 /dist
 
-*-wasm.js
-*-wasm.wasm
-*-wasm.d.ts
+src/*-wasm.js
+src/*-wasm.wasm
+src/*-wasm.d.ts

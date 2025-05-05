@@ -1,9 +1,11 @@
 {
   "name": "ikaria.js",
-  "version": "0.9.0",
+  "version": "0.1.0",
   "author": "nexryai <nexryai@ablaze.one>",
   "license": "MIT",
   "description": "A JavaScript library for media processing using FFmpeg and WebAssembly.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "rm -rf dist && tsc && cp src/ikaria-wasm.wasm dist/"
   },

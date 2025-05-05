@@ -427,9 +427,9 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
 }
 
 EMSCRIPTEN_BINDINGS(constants) {
-    function("avformat_version", &c_avformat_version);
-    function("avcodec_version", &c_avcodec_version);
-    function("avutil_version", &c_avutil_version);
+    function("AVFORMAT_VERSION", &c_avformat_version);
+    function("AVCODEC_VERSION", &c_avcodec_version);
+    function("AVUTIL_VERSION", &c_avutil_version);
 }
 
 EMSCRIPTEN_BINDINGS(structs) {

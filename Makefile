@@ -6,7 +6,7 @@ js/ikaria-wasm.js:
 	-I/opt/ffmpeg/include/ \
 	-s EXPORTED_RUNTIME_METHODS="[FS, cwrap, ccall, getValue, setValue, writeAsciiToMemory]" \
 	-s INITIAL_MEMORY=268435456 \
-	-s EXPORT_ES6=1 --emit-tsd ikaria.d.ts \
+	-s EXPORT_ES6=1 --emit-tsd ikaria-wasm.d.ts \
 	-lavcodec -lavformat -lavfilter -lavdevice -lswresample -lswscale -lavutil -lm \
 	-pthread \
 	-lworkerfs.js \

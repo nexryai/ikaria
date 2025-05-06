@@ -216,18 +216,23 @@ FileInfoResponse get_file_info(const std::string filename) {
 
 double getDurationFromPTS(AVFormatContext* fmt_ctx) {
     double max_pts_time = 0.0;
-    AVPacket pkt;
-    av_init_packet(&pkt);
+    AVPacket* pkt = av_packet_alloc();
+    if (pkt == nullptr) {
+        printf("ERROR: could not allocate packet\n");
+        throw std::runtime_error("パケットの割り当てに失敗しました");
+    }
 
-    while (av_read_frame(fmt_ctx, &pkt) >= 0) {
-        AVStream* stream = fmt_ctx->streams[pkt.stream_index];
-
-        if (pkt.pts != AV_NOPTS_VALUE) {
-            double pts_time = pkt.pts * av_q2d(stream->time_base);
+    while (av_read_frame(fmt_ctx, pkt) >= 0) {
+        AVStream* stream = fmt_ctx -> streams[pkt -> stream_index];
+        if (pkt -> pts != AV_NOPTS_VALUE) {
+            double pts_time = pkt -> pts * av_q2d(stream->time_base);
             max_pts_time = std::max(max_pts_time, pts_time);
         }
-        av_packet_unref(&pkt);
+
+        av_packet_unref(pkt);
     }
+
+    av_packet_free(&pkt);
 
     // シークで巻き戻す
     av_seek_frame(fmt_ctx, -1, 0, AVSEEK_FLAG_BACKWARD);
@@ -266,12 +271,16 @@ VideoInfoResponse getVideoInfo(const std::string filename) {
             info.height = codecpar->height;
 
             // キーフレーム取得
-            AVPacket pkt;
-            av_init_packet(&pkt);
-            while (av_read_frame(fmt_ctx, &pkt) >= 0) {
-                if (pkt.stream_index == static_cast<int>(i)) {
-                    if (pkt.flags & AV_PKT_FLAG_KEY && pkt.pts != AV_NOPTS_VALUE) {
-                        const double pts_time = pkt.pts * av_q2d(stream->time_base);
+            AVPacket* pkt = av_packet_alloc();
+            if (pkt == nullptr) {
+                printf("ERROR: could not allocate packet\n");
+                throw std::runtime_error("パケットの割り当てに失敗しました");
+            }
+
+            while (av_read_frame(fmt_ctx, pkt) >= 0) {
+                if (pkt -> stream_index == static_cast<int>(i)) {
+                    if (pkt -> flags & AV_PKT_FLAG_KEY && pkt -> pts != AV_NOPTS_VALUE) {
+                        const double pts_time = pkt -> pts * av_q2d(stream->time_base);
                         // printf("Key frame found at pts_time: %f\n", pts_time);
                         
                         // JavaScript側で扱いやすいようにstringに変換
@@ -286,11 +295,14 @@ VideoInfoResponse getVideoInfo(const std::string filename) {
                         });
                     }
                 }
-                av_packet_unref(&pkt);
+                av_packet_unref(pkt);
             }
+
+            av_packet_free(&pkt);
+
             av_seek_frame(fmt_ctx, -1, 0, AVSEEK_FLAG_BACKWARD);
-        } else if (codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
-            info.audioCodec = avcodec_get_name(codecpar->codec_id);
+        } else if (codecpar -> codec_type == AVMEDIA_TYPE_AUDIO) {
+            info.audioCodec = avcodec_get_name(codecpar -> codec_id);
         }
     }
 

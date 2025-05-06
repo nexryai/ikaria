@@ -18,7 +18,7 @@ parentPort!.on('message', async msg => {
             if (!ikaria.FS.analyzePath('/work', false).exists) {
                 ikaria.FS.mkdir('/work');
             }
-            ikaria.FS.mount("NODEFS", {
+            ikaria.FS.mount(ikaria.FS.filesystems.NODEFS, {
                 // mount parent directory of the file path
                 root: parentDir,
 

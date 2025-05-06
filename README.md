@@ -4,6 +4,20 @@ WIP: ffmpegとffprobeを利用した、WASMで動作するGPL/特許フリーの
 
 ### Development
 
+
+#### .env ファイルを作成
+Docker in Dockerなど特殊な環境でない限りは、以下の環境変数を設定します。
+
+```
+DOCKER_COMPOSE_SRC_VOLUME_DIR=./
+```
+
+Devcontainer内で作業する場合などは、ホストから見たこのリポジトリのディレクトリを指定してください。
+
+```
+DOCKER_COMPOSE_SRC_VOLUME_DIR=/Users/myname/Developer/ikaria
+```
+
 #### ビルド
 ```
 # 通常のビルド

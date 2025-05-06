@@ -127,4 +127,4 @@ COPY ./Makefile /build/Makefile
 WORKDIR /build
 
 ENV PATH="${PATH}:/opt/ffmpeg/bin"
-RUN make
+#RUN make

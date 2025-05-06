@@ -24,7 +24,7 @@
                 "vue.volar",
                 "dbaeumer.vscode-eslint",
                 "rvest.vs-code-prettier-eslint",
-                "bradlc.vscode-tailwindcss",
+                "editorconfig.editorconfig",
                 "llvm-vs-code-extensions.vscode-clangd"
             ],
             "settings": {

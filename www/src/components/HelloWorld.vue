@@ -1,151 +1,117 @@
 <template>
-  <div class="file">
-    <van-form @submit="protocol !== 'file' ? onDownload : null">
-      <van-cell-group inset>
-        <template v-if="protocol === 'file'">
-          <van-uploader
-            :after-read="onFile"
-            :accept="'.mp4,.mkv,.mp3,.webm'"
-          />
-        </template>
-
-        <template v-else-if="protocol === 'example'">
-          <van-field
-            label="サンプル選択"
-            is-link
-            clickable
-            :value="selectedExampleName"
-            placeholder="選択してください"
-            @click="showExamplePicker = true"
-          />
-          <van-popup v-model:show="showExamplePicker" position="bottom">
-            <van-picker
-              :columns="examples.map(e => e.name)"
-              @confirm="onExampleConfirm"
-              @cancel="showExamplePicker = false"
-            />
-          </van-popup>
-        </template>
-
-        <van-button
-          type="primary"
-          block
-          v-if="protocol !== 'file'"
-          native-type="submit"
+  <van-nav-bar title="Ikaria Debug UI" :border=false />
+  <van-tabs v-model:active="activeTab" class="tab-header">
+    <van-tab title="getVideoInfo" class="tab-contents">
+      <div class="file">
+        <van-uploader
+          :after-read="onFile"
+          :accept="'.mp4,.mkv,.mp3,.webm'"
+          :upload-icon="'video-o'"
+          v-if="!data"
         >
-          ダウンロード
-        </van-button>
-      </van-cell-group>
-    </van-form>
+          <template #preview-cover="{ file }">
+            <div class="preview-cover van-ellipsis">{{ file.name }}</div>
+          </template>
+        </van-uploader>
 
-    <van-progress
-      v-if="showProgress"
-      :percentage="progress"
-      color="#1989fa"
-      style="margin: 16px"
-    />
+        <div v-if="data">
+          <div v-if="file">
+            選択ファイル: {{ file.name }}（{{ file.size }} bytes）
+          </div>
 
-    <div v-if="data">
-      <div v-if="file">
-        選択ファイル: {{ file.name }}（{{ file.size }} bytes）
+          <div style="margin-top: 16px">
+            <code style="overflow-wrap: anywhere" >{{ JSON.stringify(data) }}</code>
+          </div>
+        </div>
       </div>
-      <div v-else>
-        URL: {{ url }}（{{ size }} bytes）
-      </div>
+    </van-tab>
+    <van-tab title="Trimming" class="tab-contents">
+      <div class="file">
+        <van-uploader
+          :after-read="trimming"
+          :accept="'.mp4,.mkv,.mp3,.webm'"
+          :upload-icon="'video-o'"
+          v-if="!data"
+        >
+          <template #preview-cover="{ file }">
+            <div class="preview-cover van-ellipsis">{{ file.name }}</div>
+          </template>
+        </van-uploader>
 
-      <div style="margin-top: 16px">
-        <code>{{ JSON.stringify(data) }}</code>
-        <video :src="data.blobUrl" style="width: 100%" controls></video>
-      </div>
+        <div v-if="data">
+          <div v-if="file">
+            選択ファイル: {{ file.name }}（{{ file.size }} bytes）
+          </div>
 
-      <div v-if="file && file.type !== 'audio/mpeg'" style="margin-top: 16px">
-        <p>todo</p>
+          <div style="margin-top: 16px">
+            <video :src="data.blobUrl" style="width: 100%" controls></video>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
+    </van-tab>
+    <van-tab title="标签 3" class="tab-contents">内容 3</van-tab>
+    <van-tab title="标签 4" class="tab-contents">内容 4</van-tab>
+  </van-tabs>
+
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, watch } from 'vue';
 import { showToast } from 'vant';
 
-import { getVideoInfo } from '../../../js/src';
+import { getVideoInfo, trimVideo } from '../../../js/src';
 
-const protocol = ref('file');
 const file = ref<File | null>(null);
-const url = ref<string | null>(null);
-const size = ref<number | null>(null);
 const data = ref<any>(null);
-const progress = ref(0);
-const showProgress = ref(false);
-
-const showProtocolPicker = ref(false);
-const showExamplePicker = ref(false);
-
-const protocolOptions = ['file', 'url', 'example'];
-
-const examples = [
-  {
-    name: 'Video Counter (10min)',
-    value: 'https://video-examples-public.s3.us-west-2.amazonaws.com/video_counter_10min_unfragmented_avc.mp4',
-  },
-  {
-    name: 'Tears of Steel 360p',
-    value: 'https://video-examples-public.s3.us-west-2.amazonaws.com/tears-of-steel-360p.mp4',
-  }
-];
-
-const selectedExampleName = computed(() => {
-  const example = examples.find(e => e.value === url.value);
-  return example?.name || '';
-});
-
-function onExampleConfirm(name: string) {
-  const example = examples.find(e => e.name === name);
-  if (example) {
-    url.value = example.value;
-    showExamplePicker.value = false;
-  }
-}
+const activeTab = ref(0);
 
 async function onFile(fileObj: any) {
   console.log("onFile", fileObj);
   const selected = fileObj.file as File;
   file.value = selected;
+  showToast({
+    message: 'Processing...',
+    type: 'loading',
+  });
   data.value = await getVideoInfo(selected);
 }
 
-function onDownload() {
-  if (!url.value) {
-    showToast('URLを入力してください');
-    return;
-  }
-  showProgress.value = true;
-  (window as any).$worker.onmessage = (e: MessageEvent) => {
-    data.value = e.data;
-  };
-  const xhr = new XMLHttpRequest();
-  xhr.onprogress = (event) => {
-    if (event.lengthComputable) {
-      progress.value = Math.floor((event.loaded / event.total) * 100);
-    }
-  };
-  xhr.onload = () => {
-    progress.value = 100;
-    const downloaded = new File([xhr.response], 'file');
-    file.value = downloaded;
-    size.value = downloaded.size;
-    (window as any).$worker.postMessage(['get_file_info', downloaded]);
-    setTimeout(() => (showProgress.value = false), 2000);
-  };
-  xhr.open('GET', url.value!, true);
-  xhr.responseType = 'blob';
-  xhr.send();
+async function trimming(fileObj: any) {
+  console.log("onFile", fileObj);
+  const selected = fileObj.file as File;
+  file.value = selected;
+  showToast({
+    message: 'Processing...',
+    type: 'loading',
+  });
+  data.value = await trimVideo(selected);
 }
+
+
+// タブが切り替えられたらdataをリセット
+watch(activeTab, (newVal) => {
+  if (newVal !== 0) {
+    data.value = null;
+    file.value = null;
+  }
+});
 </script>
 
 <style scoped>
+.tab-header {
+  width: 100%;
+  margin: 12px auto 12px auto
+}
+
+.tab-contents {
+  padding: 16px;
+  min-height: 100vh;
+  background-color: #f6f6f6;
+  border-radius: 10px 10px 0 0;
+}
+
 .file {
   padding: 16px;
+  text-align: center;
 }
 </style>

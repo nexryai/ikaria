@@ -489,8 +489,8 @@ EMSCRIPTEN_BINDINGS(structs) {
   function("get_file_info", &get_file_info);
   
   emscripten::value_object<Keyframe>("Keyframe")
-  .field("pts_time", &Keyframe::pts_time)
-  .field("pts_time_string", &Keyframe::pts_time_string)
+  .field("ptsTime", &Keyframe::pts_time)
+  .field("ptsTimeString", &Keyframe::pts_time_string)
   ;
   register_vector<Keyframe>("Keyframe");
 

@@ -28,7 +28,7 @@ self.onmessage = async (e: MessageEvent) => {
             // @ts-ignore
             for (let i = 0; i < info.keyframes.size(); i++) {
                 // @ts-ignore
-                keyframes.push(info.keyframes.get(i).pts_time_string);
+                keyframes.push(info.keyframes.get(i).ptsTimeString);
             }
 
             // Send back data response.

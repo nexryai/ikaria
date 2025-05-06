@@ -1,0 +1,40 @@
+{
+    "name": "Ikaria Dev",
+    "image": "emscripten/emsdk",
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {},
+        "ghcr.io/devcontainers-extra/features/pnpm:2": {},
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    },
+    "runArgs": [
+        "-p",
+        "127.0.0.1:5173:5173",
+        //"--user",
+        //"emscripten"
+    ],
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+    "workspaceFolder": "/workspace",
+    "remoteUser": "root",
+    "overrideCommand": true,
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "vue.volar",
+                "dbaeumer.vscode-eslint",
+                "rvest.vs-code-prettier-eslint",
+                "bradlc.vscode-tailwindcss",
+                "llvm-vs-code-extensions.vscode-clangd"
+            ],
+            "settings": {
+                "editor.linkedEditing": true,
+                "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
+                "editor.formatOnPaste": true,
+                "editor.formatOnSave": false,
+                "html.format.wrapLineLength": 0,
+                "editor.quickSuggestions": {
+                    "strings": "on"
+                }
+            }
+        }
+    }
+}

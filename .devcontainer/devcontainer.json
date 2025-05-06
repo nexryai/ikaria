@@ -16,7 +16,7 @@
     ],
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
     "workspaceFolder": "/workspace",
-    "remoteUser": "emscripten",
+    "remoteUser": "ubuntu",
     "overrideCommand": true,
     "customizations": {
         "vscode": {
@@ -36,7 +36,7 @@
                 "editor.quickSuggestions": {
                     "strings": "on"
                 },
-                "clangd.path": "clangd-15"
+                "clangd.path": "clangd-19"
             }
         }
     }

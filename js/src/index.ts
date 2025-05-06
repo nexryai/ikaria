@@ -61,7 +61,7 @@ export const trimVideo = async (file: File): Promise<VideoInfo> => {
         };
 
         console.log('Worker: Sending file info request', file);
-        browserWorker.postMessage(['get_video_info', file]);
+        browserWorker.postMessage(['trim_video', file]);
     });
 };
 

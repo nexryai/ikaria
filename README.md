@@ -7,10 +7,12 @@ WIP: ffmpegとffprobeを利用した、WASMで動作するGPL/特許フリーの
 #### ビルド
 ```
 # 通常のビルド
-rm -rf dist && docker-compose run ffprobe-wasm make && cp -a dist/. www/public/
+make clean
+docker compose run ffprobe-wasm make
 
 # Dockerfile変更時
-rm -rf dist && docker-compose run --build ffprobe-wasm make && cp -a dist/. www/public/
+make clean
+docker compose run --build ffprobe-wasm make
 ```
 
 #### Debug UI にアクセス

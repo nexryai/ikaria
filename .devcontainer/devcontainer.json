@@ -1,20 +1,22 @@
 {
     "name": "Ikaria Dev",
-    "image": "emscripten/emsdk",
+    "build": {
+        "dockerfile": "./Dockerfile"
+    },
     "features": {
+        "ghcr.io/devcontainers/features/git:1": {"version": "latest"},
+        "ghcr.io/devcontainers/features/sshd:1": {},
         "ghcr.io/devcontainers/features/node:1": {},
         "ghcr.io/devcontainers-extra/features/pnpm:2": {},
         "ghcr.io/devcontainers/features/docker-in-docker:2": {}
     },
     "runArgs": [
         "-p",
-        "127.0.0.1:5173:5173",
-        //"--user",
-        //"emscripten"
+        "127.0.0.1:5173:5173"
     ],
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
     "workspaceFolder": "/workspace",
-    "remoteUser": "root",
+    "remoteUser": "emscripten",
     "overrideCommand": true,
     "customizations": {
         "vscode": {
@@ -33,7 +35,8 @@
                 "html.format.wrapLineLength": 0,
                 "editor.quickSuggestions": {
                     "strings": "on"
-                }
+                },
+                "clangd.path": "clangd-15"
             }
         }
     }

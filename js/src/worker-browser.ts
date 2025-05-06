@@ -12,7 +12,39 @@ self.onmessage = async (e: MessageEvent) => {
     const ikaria = await Ikaria();
 
     switch (type) {
-        case 'get_file_info':
+        case 'get_video_info':
+            // Mount FS for files.
+            if (!ikaria.FS.analyzePath('/work', false).exists) {
+                ikaria.FS.mkdir('/work');
+            }
+
+            ikaria.FS.mount(ikaria.FS.filesystems.WORKERFS, { files: [file] }, '/work');
+
+            // Call the wasm module.
+            const info = ikaria.getVideoInfo('/work/' + file.name);
+
+            const keyframes = [];
+            // ref: https://github.com/emscripten-core/emscripten/issues/11070
+            // @ts-ignore
+            for (let i = 0; i < info.keyframes.size(); i++) {
+                // @ts-ignore
+                keyframes.push(info.keyframes.get(i).pts_time_string);
+            }
+
+            // Send back data response.
+            data = {
+                ...info,
+                keyframes: keyframes,
+            }
+
+            console.log('Worker: File info', data);
+            postMessage(data);
+
+            // Cleanup mount.
+            ikaria.FS.unmount('/work');
+            break;
+    
+        case 'trim_video':
             // Mount FS for files.
             if (!ikaria.FS.analyzePath('/work', false).exists) {
                 ikaria.FS.mkdir('/work');
@@ -26,28 +58,8 @@ self.onmessage = async (e: MessageEvent) => {
             const trimmedFile = new Blob([trimmedFileBuffer], { type: file.type });
             const blobUrl = URL.createObjectURL(trimmedFile);
 
-            // Call the wasm module.
-            const info = ikaria.getVideoInfo('/trimed_' + file.name);
-
-            const keyframes = [];
-            // ref: https://github.com/emscripten-core/emscripten/issues/11070
-            // @ts-ignore
-            for (let i = 0; i < info.keyframes.size(); i++) {
-                // @ts-ignore
-                keyframes.push(info.keyframes.get(i).pts_time_string);
-            }
-
-            const versions = {
-                libavutil:  ikaria.AVUTIL_VERSION(),
-                libavcodec:  ikaria.AVCODEC_VERSION(),
-                libavformat:  ikaria.AVFORMAT_VERSION(),
-            };
-
             // Send back data response.
             data = {
-                ...info,
-                keyframes: keyframes,
-                versions,
                 blobUrl
             }
 
@@ -57,12 +69,9 @@ self.onmessage = async (e: MessageEvent) => {
             // Cleanup mount.
             ikaria.FS.unmount('/work');
             break;
-    
-    
+        
         default:
             break;
     }
 
 }
-
-// self.importScripts('ikaria-wasm.js'); // Load ffprobe into worker context.

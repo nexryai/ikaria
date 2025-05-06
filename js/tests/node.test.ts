@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import path from 'path'
-import { getFileInfoFromPath } from '../dist/index.js'
+import { getFileInfoFromPath } from '../src/index.js'
 
 describe('getFileInfoFromPath (with actual local file)', () => {
   it('should return valid VideoInfo from a real WebM file', async () => {

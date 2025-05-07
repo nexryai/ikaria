@@ -7,9 +7,8 @@ js/src/ikaria-wasm.js:
 	-s EXPORTED_RUNTIME_METHODS="[FS, cwrap, ccall, getValue, setValue, writeAsciiToMemory]" \
 	-s INITIAL_MEMORY=268435456 \
 	-s EXPORT_ES6=1 --emit-tsd ikaria-wasm.d.ts \
-	-lavcodec -lavformat -lavfilter -lavdevice -lswresample -lswscale -lavutil -lm \
+	-lavcodec -lavformat -lavfilter -lavdevice -lswresample -lswscale -lavutil -lm -lnodefs.js -lidbfs.js -lworkerfs.js \
 	-pthread \
-	-lworkerfs.js \
 	-o js/src/ikaria-wasm.js \
 	src/ikaria.cpp
 

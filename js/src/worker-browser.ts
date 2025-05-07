@@ -7,8 +7,6 @@ self.onmessage = async (e: MessageEvent) => {
     const type = e.data[0];
     const file = e.data[1];
 
-    let data;
-
     const ikaria = await Ikaria();
 
     switch (type) {
@@ -32,7 +30,7 @@ self.onmessage = async (e: MessageEvent) => {
             }
 
             // Send back data response.
-            data = {
+            const data = {
                 ...info,
                 keyframes: keyframes,
             }

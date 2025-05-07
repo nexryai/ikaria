@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -392,12 +393,14 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
         AVPacket pkt;
         while (av_read_frame(ctx, &pkt) >= 0) {
             if (pkt.stream_index == static_cast<int>(i)) {
-                if (pkt.pts >= start_time_pts && pkt.pts <= end_time_pts) {
+                if (pkt.pts >= start_time_pts && pkt.pts < end_time_pts) {
                     // パケットのPTS/DTSを更新
                     pkt.pts = av_rescale_q(pkt.pts, in_stream->time_base, out_stream->time_base);
                     pkt.dts = av_rescale_q(pkt.dts, in_stream->time_base, out_stream->time_base);
                     pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
                     pkt.pos = -1;
+
+                    printf("Writing packet: pts=%lld, dts=%lld, duration=%lld\n", pkt.pts, pkt.dts, pkt.duration);
 
                     // パケットを書き込む
                     if ((err = av_interleaved_write_frame(out_ctx, &pkt)) < 0) {

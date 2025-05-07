@@ -43,6 +43,9 @@ self.onmessage = async (e: MessageEvent) => {
             break;
     
         case 'trim_video':
+            const startSec = e.data[2];
+            const endSec = e.data[3];
+
             // Mount FS for files.
             if (!ikaria.FS.analyzePath('/work', false).exists) {
                 ikaria.FS.mkdir('/work');
@@ -50,19 +53,13 @@ self.onmessage = async (e: MessageEvent) => {
 
             ikaria.FS.mount(ikaria.FS.filesystems.WORKERFS, { files: [file] }, '/work');
 
-            ikaria.trimingWebM('/work/' + file.name, '/trimed_' + file.name, "0", "20.000000");
+            ikaria.trimingWebM('/work/' + file.name, '/trimed_' + file.name, startSec, endSec);
 
             const trimmedFileBuffer = ikaria.FS.readFile('/trimed_' + file.name);
             const trimmedFile = new Blob([trimmedFileBuffer], { type: file.type });
             const blobUrl = URL.createObjectURL(trimmedFile);
 
-            // Send back data response.
-            data = {
-                blobUrl
-            }
-
-            console.log('Worker: File info', data);
-            postMessage(data);
+            postMessage(blobUrl);
 
             // Cleanup mount.
             ikaria.FS.unmount('/work');

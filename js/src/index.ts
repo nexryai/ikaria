@@ -45,24 +45,60 @@ export const getVideoInfo = async (file: File): Promise<VideoInfo> => {
     });
 };
 
-export const trimVideo = async (file: File): Promise<VideoInfo> => {
-    if (!browserWorker) {
-        throw new Error('This function can only be used in a browser environment.');
+
+/**
+ * Trims a video file and returns the path to the trimmed video.
+ * This function is designed to be used in a browser environment.
+ *
+ * @param file - The video file to be trimmed.
+ * @param startSec - The start time in seconds for trimming.
+ * @param endSec - The end time in seconds for trimming.
+ * @returns A promise that resolves to the path of the trimmed video as a blob URL.
+ */
+export function trimVideo(file: File, startSec: string, endSec: string): Promise<string> 
+
+/**
+ * Trims a video file and returns the resulting video as an ArrayBuffer.
+ *
+ * @param file - The path to the video file to be trimmed.
+ * @param startSec - The start time in seconds for trimming.
+ * @param endSec - The end time in seconds for trimming.
+ * @returns A promise that resolves to an ArrayBuffer containing the trimmed video data.
+ */
+export function trimVideo(file: string, startSec: string, endSec: string): Promise<ArrayBuffer> 
+
+export async function trimVideo(file: File | string, startSec: string, endSec: string): Promise<string | ArrayBuffer> {
+    if (typeof file === 'string') {
+        if (!nodeWorker) {
+            throw new Error('This function can only be used in a Node.js environment.');
+        }
+
+        return new Promise((resolve, reject) => {
+            nodeWorker.on('message', (data: any) => {
+                resolve(data);
+            });
+            nodeWorker.postMessage({ type: 'trim_video', filePath: file });
+        });
+    } else {
+        if (!browserWorker) {
+            throw new Error('This function can only be used in a browser environment.');
+        }
+
+        return new Promise((resolve, reject) => {
+            browserWorker.onmessage = (e: MessageEvent) => {
+                const data = e.data;
+                if (data.error) {
+                    reject(data.error);
+                } else {
+                    resolve(data);
+                }
+            };
+
+            browserWorker.postMessage(['trim_video', file, startSec, endSec]);
+        });
     }
 
-    return new Promise((resolve, reject) => {
-        browserWorker.onmessage = (e: MessageEvent) => {
-            const data = e.data;
-            if (data.error) {
-                reject(data.error);
-            } else {
-                resolve(data);
-            }
-        };
-
-        console.log('Worker: Sending file info request', file);
-        browserWorker.postMessage(['trim_video', file]);
-    });
+    
 };
 
 export const getVideoInfoFromPath = async (filePath: string): Promise<VideoInfo> => {

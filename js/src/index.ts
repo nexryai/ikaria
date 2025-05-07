@@ -55,7 +55,7 @@ export const getVideoInfo = async (file: File): Promise<VideoInfo> => {
  * @param endSec - The end time in seconds for trimming.
  * @returns A promise that resolves to the path of the trimmed video as a blob URL.
  */
-export function trimVideo(file: File, startSec: string, endSec: string): Promise<string> 
+export function trimVideo(file: File, startSec: string, endSec: string, tweakTimestamp?: boolean): Promise<string> 
 
 /**
  * Trims a video file and returns the resulting video as an ArrayBuffer.
@@ -65,9 +65,9 @@ export function trimVideo(file: File, startSec: string, endSec: string): Promise
  * @param endSec - The end time in seconds for trimming.
  * @returns A promise that resolves to an ArrayBuffer containing the trimmed video data.
  */
-export function trimVideo(file: string, startSec: string, endSec: string): Promise<ArrayBuffer> 
+export function trimVideo(file: string, startSec: string, endSec: string, tweakTimestamp?: boolean): Promise<ArrayBuffer>;
 
-export async function trimVideo(file: File | string, startSec: string, endSec: string): Promise<string | ArrayBuffer> {
+export async function trimVideo(file: File | string, startSec: string, endSec: string, tweakTimestamp: boolean = true): Promise<string | ArrayBuffer> {
     if (typeof file === 'string') {
         if (!nodeWorker) {
             throw new Error('This function can only be used in a Node.js environment.');
@@ -94,7 +94,7 @@ export async function trimVideo(file: File | string, startSec: string, endSec: s
                 }
             };
 
-            browserWorker.postMessage(['trim_video', file, startSec, endSec]);
+            browserWorker.postMessage(['trim_video', file, startSec, endSec, tweakTimestamp]);
         });
     }
 

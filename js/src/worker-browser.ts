@@ -45,6 +45,7 @@ self.onmessage = async (e: MessageEvent) => {
         case 'trim_video':
             const startSec = e.data[2];
             const endSec = e.data[3];
+            const tweakTimestamp = e.data[4];
 
             // Mount FS for files.
             if (!ikaria.FS.analyzePath('/work', false).exists) {
@@ -53,7 +54,7 @@ self.onmessage = async (e: MessageEvent) => {
 
             ikaria.FS.mount(ikaria.FS.filesystems.WORKERFS, { files: [file] }, '/work');
 
-            ikaria.trimingWebM('/work/' + file.name, '/trimed_' + file.name, startSec, endSec);
+            ikaria.trimingWebM('/work/' + file.name, '/trimed_' + file.name, startSec, endSec, tweakTimestamp);
 
             const trimmedFileBuffer = ikaria.FS.readFile('/trimed_' + file.name);
             const trimmedFile = new Blob([trimmedFileBuffer], { type: file.type });

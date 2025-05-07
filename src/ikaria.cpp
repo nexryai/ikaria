@@ -311,7 +311,7 @@ VideoInfoResponse getVideoInfo(const std::string filename) {
     return info;
 }
 
-void trimingWebM(const std::string inputFilePath, const std::string outputFilePath, const std::string start_time, const std::string end_time) {
+void trimingWebM(const std::string inputFilePath, const std::string outputFilePath, const std::string start_time, const std::string end_time, const bool tweak_timestamp) {
     AVFormatContext* ctx = nullptr;
     
     int err;
@@ -397,6 +397,14 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
                     // パケットのPTS/DTSを更新
                     pkt.pts = av_rescale_q(pkt.pts, in_stream->time_base, out_stream->time_base);
                     pkt.dts = av_rescale_q(pkt.dts, in_stream->time_base, out_stream->time_base);
+
+                    // PTS/DTSを調整する場合
+                    if (tweak_timestamp) {
+                        pkt.pts -= start_time_pts;
+                        pkt.dts -= start_time_pts;
+                    }
+
+                    // パケットのdurationを更新
                     pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
                     pkt.pos = -1;
 

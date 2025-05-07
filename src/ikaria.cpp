@@ -220,7 +220,7 @@ double getDurationFromPTS(AVFormatContext* fmt_ctx) {
     AVPacket* pkt = av_packet_alloc();
     if (pkt == nullptr) {
         printf("ERROR: could not allocate packet\n");
-        throw std::runtime_error("パケットの割り当てに失敗しました");
+        return 0.0;
     }
 
     while (av_read_frame(fmt_ctx, pkt) >= 0) {
@@ -261,6 +261,13 @@ VideoInfoResponse getVideoInfo(const std::string filename) {
     info.duration = (fmt_ctx->duration != AV_NOPTS_VALUE)
                     ? (double)fmt_ctx->duration / AV_TIME_BASE
                     : getDurationFromPTS(fmt_ctx);
+
+
+    if (info.duration < 0) {
+        avformat_close_input(&fmt_ctx);
+        printf("ERROR: could not get duration\n");
+        throw std::runtime_error("Failed to get duration");
+    }
 
     for (unsigned i = 0; i < fmt_ctx->nb_streams; ++i) {
         AVStream* stream = fmt_ctx->streams[i];
@@ -317,20 +324,40 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
     int err;
     if ((err = avformat_open_input(&ctx, inputFilePath.c_str(), nullptr, nullptr)) < 0) {
         printf("failed to open file: %s\n", av_err2str(err));
-        throw std::runtime_error("ファイルを開けませんでした");
+
+        // Clean up
+        avformat_close_input(&ctx);
+        if (ctx->pb) {
+            avio_closep(&ctx->pb);
+        }
+
+        throw std::runtime_error("Could not open input file");
     }
 
     if (avformat_find_stream_info(ctx, nullptr) < 0) {
-        avformat_close_input(&ctx);
         printf("ERROR: could not find stream information\n");
-        throw std::runtime_error("ストリーム情報を取得できませんでした");
+
+        // Clean up
+        avformat_close_input(&ctx);
+        if (ctx->pb) {
+            avio_closep(&ctx->pb);
+        }
+
+        throw std::runtime_error("Failed to find stream information");
     }
 
     // 出力ファイルの初期化
     AVFormatContext* out_ctx = nullptr;
     if ((err = avformat_alloc_output_context2(&out_ctx, nullptr, nullptr, outputFilePath.c_str())) < 0) {
         printf("ERROR: could not allocate output context\n");
-        throw std::runtime_error("出力ファイルの初期化に失敗しました");
+
+        avformat_free_context(out_ctx);
+        avformat_close_input(&ctx);
+        if (out_ctx->pb) {
+            avio_closep(&out_ctx->pb);
+        }
+
+        throw std::runtime_error("Failed to allocate output context");
     }
 
     // ストリームのコピー
@@ -340,7 +367,14 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
         AVStream* out_stream = avformat_new_stream(out_ctx, nullptr);
         if (!out_stream) {
             printf("ERROR: could not allocate stream\n");
-            throw std::runtime_error("ストリームのコピーに失敗しました");
+
+            avformat_free_context(out_ctx);
+            avformat_close_input(&ctx);
+            if (out_ctx->pb) {
+                avio_closep(&out_ctx->pb);
+            }
+
+            throw std::runtime_error("Failed to allocate stream");
         }
 
         printf("Stream %d: codec_type=%d, codec_name=%s\n", i, in_stream->codecpar->codec_type, avcodec_get_name(in_stream->codecpar->codec_id));
@@ -353,7 +387,14 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
     if (!(out_ctx->oformat->flags & AVFMT_NOFILE)) {
         if ((err = avio_open(&out_ctx->pb, outputFilePath.c_str(), AVIO_FLAG_WRITE)) < 0) {
             printf("failed to open output file: %s\n", av_err2str(err));
-            throw std::runtime_error("出力ファイルを開けませんでした");
+
+            avformat_free_context(out_ctx);
+            avformat_close_input(&ctx);
+            if (out_ctx->pb) {
+                avio_closep(&out_ctx->pb);
+            }
+
+            throw std::runtime_error("Could not open output file");
         }
     }
 
@@ -386,7 +427,14 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
         // ストリームの開始時間を設定
         if (av_seek_frame(ctx, i, start_time_pts, AVSEEK_FLAG_BACKWARD) < 0) {
             printf("ERROR: could not seek to start time\n");
-            throw std::runtime_error("開始時間のシークに失敗しました");
+
+            avformat_free_context(out_ctx);
+            avformat_close_input(&ctx);
+            if (out_ctx->pb) {
+                avio_closep(&out_ctx->pb);
+            }
+
+            throw std::runtime_error("Failed to seek to start time");
         }
 
         // パケットの読み込みと書き込み
@@ -412,8 +460,18 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
 
                     // パケットを書き込む
                     if ((err = av_interleaved_write_frame(out_ctx, &pkt)) < 0) {
-                        printf("ERROR: could not write frame\n");
-                        throw std::runtime_error("フレームの書き込みに失敗しました");
+                        printf("ERROR: could not write frame: %s\n", av_err2str(err));
+                        printf("pts: %lld, dts: %lld, duration: %lld\n", pkt.pts, pkt.dts, pkt.duration);
+
+                        av_packet_unref(&pkt);
+
+                        avformat_free_context(out_ctx);
+                        avformat_close_input(&ctx);
+                        if (out_ctx->pb) {
+                            avio_closep(&out_ctx->pb);
+                        }
+
+                        throw std::runtime_error("Failed to write frame");
                     }
 
                     copied_pkts++;
@@ -427,7 +485,7 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
                 av_packet_unref(&pkt);
             }
         }
-
+        
         printf("Copied %d packets from stream %d\n", copied_pkts, i);
     }
 
@@ -435,7 +493,16 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
     printf("Writing trailer...\n");
     if ((err = av_write_trailer(out_ctx)) < 0) {
         printf("ERROR: could not write trailer\n");
-        throw std::runtime_error("トレーラーの書き込みに失敗しました");
+
+        // 解放
+        if (out_ctx->pb) {
+            avio_closep(&out_ctx->pb);
+        }
+
+        avformat_free_context(out_ctx);
+        avformat_close_input(&ctx);
+
+        throw std::runtime_error("Failed to write trailer");
     }
 
     // 出力ファイルを閉じる

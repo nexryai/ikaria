@@ -21,12 +21,11 @@ DOCKER_COMPOSE_SRC_VOLUME_DIR=/Users/myname/Developer/ikaria
 #### ビルド
 ```
 # 通常のビルド
-make clean
-docker compose run ffprobe-wasm make
+docker compose run ffprobe-wasm task build
 
-# Dockerfile変更時
+# Dockerfile/依存ライブラリを含めて再コンパイル
 make clean
-docker compose run --build ffprobe-wasm make
+docker compose run --build ffprobe-wasm task build
 ```
 
 #### Debug UI にアクセス

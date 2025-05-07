@@ -53,6 +53,7 @@ export const getVideoInfo = async (file: File): Promise<VideoInfo> => {
  * @param file - The video file to be trimmed.
  * @param startSec - The start time in seconds for trimming.
  * @param endSec - The end time in seconds for trimming.
+ * @param tweakTimestamp - Optional parameter to adjust the timestamp of the trimmed video.
  * @returns A promise that resolves to the path of the trimmed video as a blob URL.
  */
 export function trimVideo(file: File, startSec: string, endSec: string, tweakTimestamp?: boolean): Promise<string> 
@@ -63,6 +64,7 @@ export function trimVideo(file: File, startSec: string, endSec: string, tweakTim
  * @param file - The path to the video file to be trimmed.
  * @param startSec - The start time in seconds for trimming.
  * @param endSec - The end time in seconds for trimming.
+ * @param tweakTimestamp - Optional parameter to adjust the timestamp of the trimmed video.
  * @returns A promise that resolves to an ArrayBuffer containing the trimmed video data.
  */
 export function trimVideo(file: string, startSec: string, endSec: string, tweakTimestamp?: boolean): Promise<ArrayBuffer>;

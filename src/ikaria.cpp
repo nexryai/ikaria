@@ -408,7 +408,7 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
                     pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
                     pkt.pos = -1;
 
-                    printf("Writing packet: pts=%lld, dts=%lld, duration=%lld\n", pkt.pts, pkt.dts, pkt.duration);
+                    // printf("Writing packet: pts=%lld, dts=%lld, duration=%lld\n", pkt.pts, pkt.dts, pkt.duration);
 
                     // パケットを書き込む
                     if ((err = av_interleaved_write_frame(out_ctx, &pkt)) < 0) {

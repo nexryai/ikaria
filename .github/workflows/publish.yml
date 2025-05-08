@@ -19,14 +19,12 @@ jobs:
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
-        working-directory: /js
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
-        working-directory: /js
       
       - name: Install dependencies
         working-directory: /js

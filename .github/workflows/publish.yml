@@ -17,25 +17,28 @@ jobs:
           echo "DOCKER_COMPOSE_SRC_VOLUME_DIR=./" > .env
           docker compose run ikaria task build
 
-      - name: Change directory to /js
-        run: cd js
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
+        working-directory: /js
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
-
+        working-directory: /js
+      
       - name: Install dependencies
+        working-directory: /js
         run: pnpm install
+        
 
       - name: Build package
+        working-directory: /js
         run: pnpm build
 
       - name: Publish to NPM
+        working-directory: /js
         run: pnpm publish --no-git-checks --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} 

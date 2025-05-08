@@ -21,18 +21,18 @@ DOCKER_COMPOSE_SRC_VOLUME_DIR=/Users/myname/Developer/ikaria
 #### ビルド
 ```
 # 通常のビルド
-docker compose run ffprobe-wasm task build
+docker compose run ikaria task build
 
 # Dockerfile/依存ライブラリを含めて再コンパイル
 make clean
-docker compose run --build ffprobe-wasm task build
+docker compose run --build ikaria task build
 ```
 
 #### Debug UI にアクセス
 ```
 cd www
 pnpm install
-pnpm serve
+pnpm dev
 ```
 
 ### Legal

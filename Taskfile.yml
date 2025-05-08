@@ -39,7 +39,7 @@ tasks:
   download-ffmpeg:
     dir: /tmp
     cmds:
-      - wget http://ffmpeg.org/releases/ffmpeg-{{.FFMPEG_VERSION}}.tar.gz
+      - wget https://ffmpeg.org/releases/ffmpeg-{{.FFMPEG_VERSION}}.tar.gz
       - tar zxf ffmpeg-{{.FFMPEG_VERSION}}.tar.gz && rm ffmpeg-{{.FFMPEG_VERSION}}.tar.gz
 
   build-ffmpeg:

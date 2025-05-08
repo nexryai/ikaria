@@ -2,6 +2,10 @@
   "name": "ikaria.js",
   "version": "0.1.2",
   "author": "nexryai <nexryai@ablaze.one>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ablaze-MIRAI/ikaria"
+  },
   "type": "module",
   "license": "MIT",
   "description": "A JavaScript library for media processing using FFmpeg and WebAssembly.",

@@ -24,7 +24,8 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        working-directory: /js
+        run: npm install -g pnpm
       
       - name: Install dependencies
         working-directory: /js

@@ -17,17 +17,13 @@ if (isNode()) {
     browserWorker = new window.Worker(new URL("./worker-browser", import.meta.url), { type: 'module' });
 }
 
-type Keyframe = {
-    pts_time: number;
-}
-
 type VideoInfo = {
     duration: number;
     width: number;
     height: number;
     videoCodec: string;
     audioCodec: string;
-    keyframes: Keyframe[];
+    keyframes: string[];
 }
 
 /**

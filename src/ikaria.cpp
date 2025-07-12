@@ -290,13 +290,13 @@ VideoInfoResponse getVideoInfo(const std::string filename) {
                     if (pkt -> flags & AV_PKT_FLAG_KEY && pkt -> pts != AV_NOPTS_VALUE) {
                         const double pts_time = pkt -> pts * av_q2d(stream->time_base);
                         // printf("Key frame found at pts_time: %f\n", pts_time);
-                        
+
                         // JavaScript側で扱いやすいようにstringに変換
                         // ffprobeのCLIの出力と同じ、"0.000000" 形式にする
                         static char buffer[64];
                         snprintf(buffer, sizeof(buffer), "%.6f", pts_time);
                         std::string pts_time_string(buffer);
-                        
+
                         info.keyframes.push_back({
                             .pts_time = pts_time,
                             .pts_time_string = pts_time_string
@@ -320,7 +320,7 @@ VideoInfoResponse getVideoInfo(const std::string filename) {
 
 void trimingWebM(const std::string inputFilePath, const std::string outputFilePath, const std::string start_time, const std::string end_time, const bool tweak_timestamp) {
     AVFormatContext* ctx = nullptr;
-    
+
     int err;
     if ((err = avformat_open_input(&ctx, inputFilePath.c_str(), nullptr, nullptr)) < 0) {
         printf("failed to open file: %s\n", av_err2str(err));
@@ -408,7 +408,7 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
     // 秒からPTSに変換
     //int64_t start_time_pts = std::stod(start_time) * AV_TIME_BASE;
     //int64_t end_time_pts = std::stod(end_time) * AV_TIME_BASE;
-    
+
     // printf("Trimming from %s to %s (pts: %lld to %lld)\n", start_time.c_str(), end_time.c_str(), start_time_pts, end_time_pts);
 
     for (unsigned i = 0; i < ctx->nb_streams; ++i) {
@@ -476,7 +476,7 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
 
                     copied_pkts++;
                 }
-                
+
                 // 終了時間を超えたらループを抜ける
                 if (pkt.pts > end_time_pts) {
                     break;
@@ -485,7 +485,7 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
                 av_packet_unref(&pkt);
             }
         }
-        
+
         printf("Copied %d packets from stream %d\n", copied_pkts, i);
     }
 
@@ -514,6 +514,13 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
     avformat_close_input(&ctx);
 
     return;
+}
+
+/*
+    If width and height are not specified, the image will be compressed to the original size.
+*/
+void compressImage(const std::string& input_file_path, const std::string& output_file_path, int target_width, int target_height,const std::string& output_format) {
+
 }
 
 EMSCRIPTEN_BINDINGS(constants) {
@@ -577,7 +584,7 @@ EMSCRIPTEN_BINDINGS(structs) {
   .field("chapters", &FileInfoResponse::chapters)
   ;
   function("get_file_info", &get_file_info);
-  
+
   emscripten::value_object<Keyframe>("Keyframe")
   .field("ptsTime", &Keyframe::pts_time)
   .field("ptsTimeString", &Keyframe::pts_time_string)

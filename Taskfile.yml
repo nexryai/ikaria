@@ -6,6 +6,7 @@ env:
   LIBVPX_VERSION: 1.15.1
   OPUS_VERSION: 1.5.2
   LAME_VERSION: "3.100"
+  LIBWEBP_VERSION: 1.6.0
   FFMPEG_VERSION: 7.1.1
   CFLAGS: -s USE_PTHREADS=1 -O3 -I{{.PREFIX}}/include
   LDFLAGS: -s USE_PTHREADS=1 -O3 -I{{.PREFIX}}/include -L{{.PREFIX}}/lib -s INITIAL_MEMORY=33554432
@@ -35,6 +36,15 @@ tasks:
       - tar zxf lame-{{.LAME_VERSION}}.tar.gz
       - cd /tmp/lame-{{.LAME_VERSION}} && emconfigure ./configure --prefix={{.PREFIX}} --host=i686-gnu --enable-static --disable-frontend
       - cd /tmp/lame-{{.LAME_VERSION}} && emmake make && emmake make install
+
+  build-libwebp:
+    dir: /tmp
+    cmds:
+      - git clone https://github.com/webmproject/libwebp
+      - cd /tmp/libwebp && git checkout v{{.LIBWEBP_VERSION}}
+      - cd /tmp/libwebp && emconfigure ./autogen.sh
+      - cd /tmp/libwebp && emconfigure ./configure --prefix={{.PREFIX}} --disable-shared
+      - cd /tmp/libwebp && emmake make && emmake make install
 
   download-ffmpeg:
     dir: /tmp
@@ -73,6 +83,7 @@ tasks:
         --enable-libvpx \
         --enable-libopus \
         --enable-libmp3lame \
+        --enable-libwebp \
         --extra-cflags="{{.CFLAGS}}" \
         --extra-cxxflags="{{.CFLAGS}}" \
         --extra-ldflags="{{.LDFLAGS}}" \
@@ -84,18 +95,18 @@ tasks:
         --cxx=em++ \
         --objcc=emcc \
         --dep-cc=emcc
-      - cd /tmp/ffmpeg-{{.FFMPEG_VERSION}} && emmake make -j4 && emmake make install    
-  
+      - cd /tmp/ffmpeg-{{.FFMPEG_VERSION}} && emmake make -j4 && emmake make install
+
   build-deps:
-    deps: [build-libvpx, build-opus, build-lame, download-ffmpeg] 
+    deps: [build-libvpx, build-opus, build-lame, build-libwebp, download-ffmpeg]
     cmds:
       - task: build-ffmpeg
-  
+
   clean:
     cmds:
       - rm -f js/src/ikaria-wasm.js
       - rm -f js/src/ikaria-wasm.wasm
-  
+
   build:
     cmds:
       - task: clean

@@ -7,7 +7,7 @@ if (!parentPort) {
 
 parentPort.on('message', async (message: any) => {
     try {
-        const { type, filePath, startSec, endSec, tweakTimestamp } = message;
+        const { type, filePath, startSec, endSec, tweakTimestamp, resizeWidth, resizeHeight } = message;
         const parentDir = filePath.substring(0, filePath.lastIndexOf('/'));
         const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
 
@@ -54,6 +54,12 @@ parentPort.on('message', async (message: any) => {
                 ikaria.trimingWebM('/work/' + fileName, '/trimed_' + fileName, startSec, endSec, tweakTimestamp);
                 const trimmedFileBuffer = ikaria.FS.readFile('/trimed_' + fileName);
                 parentPort?.postMessage(trimmedFileBuffer);
+                break;
+
+            case 'reseize_image':
+                ikaria.resizeImageToWebP('/work/' + fileName, `/${fileName}2.webp`, resizeWidth, resizeHeight);
+                const resizedImageBuffer = ikaria.FS.readFile(`/${fileName}2.webp`);
+                parentPort?.postMessage(resizedImageBuffer);
                 break;
 
             default:

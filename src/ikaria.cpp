@@ -14,6 +14,7 @@ extern "C" {
 #include <libavutil/avutil.h>
 #include <libavutil/bprint.h>
 #include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
 };
 
 const std::string c_avformat_version() {
@@ -517,11 +518,176 @@ void trimingWebM(const std::string inputFilePath, const std::string outputFilePa
 }
 
 /*
+    画像、アニメーション画像をリサイズ/リフォーマットする
     If width and height are not specified, the image will be compressed to the original size.
 */
-void compressImage(const std::string& input_file_path, const std::string& output_file_path, int target_width, int target_height,const std::string& output_format) {
+void resizeImageToWebP(const std::string& input_file_path, const std::string& output_file_path, int target_width, int target_height) {
+    av_log_set_level(AV_LOG_ERROR);
 
+    AVFormatContext* in_fmt_ctx = nullptr;
+    int ret = 0;
+
+    if ((ret = avformat_open_input(&in_fmt_ctx, input_file_path.c_str(), nullptr, nullptr)) < 0) {
+        printf("Failed to open input file: %s\n", av_err2str(ret));
+        throw std::runtime_error("Failed to open input file");
+    }
+
+    if ((ret = avformat_find_stream_info(in_fmt_ctx, nullptr)) < 0) {
+        avformat_close_input(&in_fmt_ctx);
+        printf("Failed to find stream info: %s\n", av_err2str(ret));
+        throw std::runtime_error("Failed to find stream info");
+    }
+
+    int video_stream_index = -1;
+    for (unsigned i = 0; i < in_fmt_ctx->nb_streams; ++i) {
+        if (in_fmt_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+            video_stream_index = i;
+            break;
+        }
+    }
+
+    if (video_stream_index == -1) {
+        avformat_close_input(&in_fmt_ctx);
+        throw std::runtime_error("No video stream found");
+    }
+
+    AVCodecParameters* codecpar = in_fmt_ctx->streams[video_stream_index]->codecpar;
+    const AVCodec* decoder = avcodec_find_decoder(codecpar->codec_id);
+    if (!decoder) {
+        avformat_close_input(&in_fmt_ctx);
+        throw std::runtime_error("Failed to find decoder");
+    }
+
+    AVCodecContext* dec_ctx = avcodec_alloc_context3(decoder);
+    if ((ret = avcodec_parameters_to_context(dec_ctx, codecpar)) < 0) {
+        avcodec_free_context(&dec_ctx);
+        avformat_close_input(&in_fmt_ctx);
+        throw std::runtime_error("Failed to copy codec parameters");
+    }
+
+    if ((ret = avcodec_open2(dec_ctx, decoder, nullptr)) < 0) {
+        avcodec_free_context(&dec_ctx);
+        avformat_close_input(&in_fmt_ctx);
+        throw std::runtime_error("Failed to open decoder");
+    }
+
+    const AVCodec* encoder = avcodec_find_encoder(AV_CODEC_ID_WEBP);
+    if (!encoder) {
+        throw std::runtime_error("WebP encoder not found");
+    }
+
+    AVFormatContext* out_fmt_ctx = nullptr;
+    if ((ret = avformat_alloc_output_context2(&out_fmt_ctx, nullptr, nullptr, output_file_path.c_str())) < 0) {
+        throw std::runtime_error("Failed to create output context");
+    }
+
+    AVStream* out_stream = avformat_new_stream(out_fmt_ctx, nullptr);
+    if (!out_stream) {
+        throw std::runtime_error("Failed to create output stream");
+    }
+
+    AVCodecContext* enc_ctx = avcodec_alloc_context3(encoder);
+    enc_ctx->height = target_height > 0 ? target_height : codecpar->height;
+    enc_ctx->width = target_width > 0 ? target_width : codecpar->width;
+    enc_ctx->pix_fmt = AV_PIX_FMT_YUVA420P; // アルファチャンネル対応
+    enc_ctx->time_base = in_fmt_ctx->streams[video_stream_index]->time_base;
+
+    if ((ret = avcodec_open2(enc_ctx, encoder, nullptr)) < 0) {
+        throw std::runtime_error("Failed to open encoder");
+    }
+
+    if ((ret = avcodec_parameters_from_context(out_stream->codecpar, enc_ctx)) < 0) {
+        throw std::runtime_error("Failed to copy encoder parameters");
+    }
+
+    if (!(out_fmt_ctx->oformat->flags & AVFMT_NOFILE)) {
+        if ((ret = avio_open(&out_fmt_ctx->pb, output_file_path.c_str(), AVIO_FLAG_WRITE)) < 0) {
+            throw std::runtime_error("Failed to open output file");
+        }
+    }
+
+    if ((ret = avformat_write_header(out_fmt_ctx, nullptr)) < 0) {
+        throw std::runtime_error("Failed to write output header");
+    }
+
+    struct SwsContext* sws_ctx = nullptr;
+
+    AVPacket* pkt = av_packet_alloc();
+    AVFrame* frame = av_frame_alloc();
+    AVFrame* scaled_frame = av_frame_alloc();
+
+    scaled_frame->format = enc_ctx->pix_fmt;
+    scaled_frame->width  = enc_ctx->width;
+    scaled_frame->height = enc_ctx->height;
+    av_frame_get_buffer(scaled_frame, 32);
+
+    while (av_read_frame(in_fmt_ctx, pkt) >= 0) {
+        if (pkt->stream_index != video_stream_index) {
+            av_packet_unref(pkt);
+            continue;
+        }
+
+        if ((ret = avcodec_send_packet(dec_ctx, pkt)) < 0) {
+            printf("Error sending packet: %s\n", av_err2str(ret));
+            break;
+        }
+
+        while ((ret = avcodec_receive_frame(dec_ctx, frame)) >= 0) {
+            if (!sws_ctx) {
+                sws_ctx = sws_getContext(
+                    frame->width, frame->height, (AVPixelFormat)frame->format,
+                    scaled_frame->width, scaled_frame->height, enc_ctx->pix_fmt,
+                    SWS_BICUBIC, nullptr, nullptr, nullptr);
+            }
+
+            sws_scale(sws_ctx,
+                      frame->data, frame->linesize,
+                      0, frame->height,
+                      scaled_frame->data, scaled_frame->linesize);
+
+            scaled_frame->pts = frame->pts;
+
+            if ((ret = avcodec_send_frame(enc_ctx, scaled_frame)) < 0) {
+                throw std::runtime_error("Failed to send frame to encoder");
+            }
+
+            AVPacket out_pkt;
+            av_init_packet(&out_pkt);
+            out_pkt.data = nullptr;
+            out_pkt.size = 0;
+
+            while ((ret = avcodec_receive_packet(enc_ctx, &out_pkt)) >= 0) {
+                out_pkt.stream_index = out_stream->index;
+                av_packet_rescale_ts(&out_pkt, enc_ctx->time_base, out_stream->time_base);
+
+                if ((ret = av_interleaved_write_frame(out_fmt_ctx, &out_pkt)) < 0) {
+                    av_packet_unref(&out_pkt);
+                    throw std::runtime_error("Failed to write output frame");
+                }
+                av_packet_unref(&out_pkt);
+            }
+        }
+
+        av_packet_unref(pkt);
+    }
+
+    av_write_trailer(out_fmt_ctx);
+
+    // 後処理
+    av_frame_free(&frame);
+    av_frame_free(&scaled_frame);
+    av_packet_free(&pkt);
+    sws_freeContext(sws_ctx);
+
+    avcodec_free_context(&dec_ctx);
+    avcodec_free_context(&enc_ctx);
+    avformat_close_input(&in_fmt_ctx);
+    if (!(out_fmt_ctx->oformat->flags & AVFMT_NOFILE)) {
+        avio_closep(&out_fmt_ctx->pb);
+    }
+    avformat_free_context(out_fmt_ctx);
 }
+
 
 EMSCRIPTEN_BINDINGS(constants) {
     function("AVFORMAT_VERSION", &c_avformat_version);
@@ -530,77 +696,79 @@ EMSCRIPTEN_BINDINGS(constants) {
 }
 
 EMSCRIPTEN_BINDINGS(structs) {
-  emscripten::value_object<Tag>("Tag")
-  .field("key", &Tag::key)
-  .field("value", &Tag::value)
-  ;
-  register_vector<Tag>("Tag");
+    emscripten::value_object<Tag>("Tag")
+    .field("key", &Tag::key)
+    .field("value", &Tag::value)
+    ;
+    register_vector<Tag>("Tag");
 
-  emscripten::value_object<Stream>("Stream")
-  .field("id", &Stream::id)
-  .field("start_time", &Stream::start_time)
-  .field("duration", &Stream::duration)
-  .field("codec_type", &Stream::codec_type)
-  .field("codec_name", &Stream::codec_name)
-  .field("format", &Stream::format)
-  .field("bit_rate", &Stream::bit_rate)
-  .field("profile", &Stream::profile)
-  .field("level", &Stream::level)
-  .field("width", &Stream::width)
-  .field("height", &Stream::height)
-  .field("sample_rate", &Stream::sample_rate)
-  .field("frame_size", &Stream::frame_size)
-  .field("tags", &Stream::tags)
-  ;
-  register_vector<Stream>("Stream");
+    emscripten::value_object<Stream>("Stream")
+    .field("id", &Stream::id)
+    .field("start_time", &Stream::start_time)
+    .field("duration", &Stream::duration)
+    .field("codec_type", &Stream::codec_type)
+    .field("codec_name", &Stream::codec_name)
+    .field("format", &Stream::format)
+    .field("bit_rate", &Stream::bit_rate)
+    .field("profile", &Stream::profile)
+    .field("level", &Stream::level)
+    .field("width", &Stream::width)
+    .field("height", &Stream::height)
+    .field("sample_rate", &Stream::sample_rate)
+    .field("frame_size", &Stream::frame_size)
+    .field("tags", &Stream::tags)
+    ;
+    register_vector<Stream>("Stream");
 
-  emscripten::value_object<Chapter>("Chapter")
-  .field("id", &Chapter::id)
-  .field("time_base", &Chapter::time_base)
-  .field("start", &Chapter::start)
-  .field("end", &Chapter::end)
-  .field("tags", &Chapter::tags)
-  ;
-  register_vector<Chapter>("Chapter");
+    emscripten::value_object<Chapter>("Chapter")
+    .field("id", &Chapter::id)
+    .field("time_base", &Chapter::time_base)
+    .field("start", &Chapter::start)
+    .field("end", &Chapter::end)
+    .field("tags", &Chapter::tags)
+    ;
+    register_vector<Chapter>("Chapter");
 
-  emscripten::value_object<Frame>("Frame")
-  .field("frame_number", &Frame::frame_number)
-  .field("pict_type", &Frame::pict_type)
-  .field("pts", &Frame::pts)
-  .field("dts", &Frame::dts)
-  .field("pos", &Frame::pos)
-  .field("pkt_size", &Frame::pkt_size);
-  register_vector<Frame>("Frame");
+    emscripten::value_object<Frame>("Frame")
+    .field("frame_number", &Frame::frame_number)
+    .field("pict_type", &Frame::pict_type)
+    .field("pts", &Frame::pts)
+    .field("dts", &Frame::dts)
+    .field("pos", &Frame::pos)
+    .field("pkt_size", &Frame::pkt_size);
+    register_vector<Frame>("Frame");
 
-  emscripten::value_object<FileInfoResponse>("FileInfoResponse")
-  .field("name", &FileInfoResponse::name)
-  .field("duration", &FileInfoResponse::duration)
-  .field("bit_rate", &FileInfoResponse::bit_rate)
-  .field("url", &FileInfoResponse::url)
-  .field("nb_streams", &FileInfoResponse::nb_streams)
-  .field("flags", &FileInfoResponse::flags)
-  .field("streams", &FileInfoResponse::streams)
-  .field("nb_chapters", &FileInfoResponse::nb_chapters)
-  .field("chapters", &FileInfoResponse::chapters)
-  ;
-  function("get_file_info", &get_file_info);
+    emscripten::value_object<FileInfoResponse>("FileInfoResponse")
+    .field("name", &FileInfoResponse::name)
+    .field("duration", &FileInfoResponse::duration)
+    .field("bit_rate", &FileInfoResponse::bit_rate)
+    .field("url", &FileInfoResponse::url)
+    .field("nb_streams", &FileInfoResponse::nb_streams)
+    .field("flags", &FileInfoResponse::flags)
+    .field("streams", &FileInfoResponse::streams)
+    .field("nb_chapters", &FileInfoResponse::nb_chapters)
+    .field("chapters", &FileInfoResponse::chapters)
+    ;
+    function("get_file_info", &get_file_info);
 
-  emscripten::value_object<Keyframe>("Keyframe")
-  .field("ptsTime", &Keyframe::pts_time)
-  .field("ptsTimeString", &Keyframe::pts_time_string)
-  ;
-  register_vector<Keyframe>("Keyframe");
+    emscripten::value_object<Keyframe>("Keyframe")
+    .field("ptsTime", &Keyframe::pts_time)
+    .field("ptsTimeString", &Keyframe::pts_time_string)
+    ;
+    register_vector<Keyframe>("Keyframe");
 
-  emscripten::value_object<VideoInfoResponse>("VideoInfoResponse")
-  .field("duration", &VideoInfoResponse::duration)
-  .field("width", &VideoInfoResponse::width)
-  .field("height", &VideoInfoResponse::height)
-  .field("videoCodec", &VideoInfoResponse::videoCodec)
-  .field("audioCodec", &VideoInfoResponse::audioCodec)
-  .field("keyframes", &VideoInfoResponse::keyframes)
-  ;
+    emscripten::value_object<VideoInfoResponse>("VideoInfoResponse")
+    .field("duration", &VideoInfoResponse::duration)
+    .field("width", &VideoInfoResponse::width)
+    .field("height", &VideoInfoResponse::height)
+    .field("videoCodec", &VideoInfoResponse::videoCodec)
+    .field("audioCodec", &VideoInfoResponse::audioCodec)
+    .field("keyframes", &VideoInfoResponse::keyframes)
+    ;
 
-  function("getVideoInfo", &getVideoInfo);
+    function("getVideoInfo", &getVideoInfo);
 
-  function("trimingWebM", &trimingWebM);
+    function("trimingWebM", &trimingWebM);
+
+    function("resizeImageToWebP", &resizeImageToWebP);
 }

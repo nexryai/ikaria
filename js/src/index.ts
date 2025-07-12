@@ -91,7 +91,7 @@ export async function getVideoInfo(file: File | string): Promise<VideoInfo> {
  * @param tweakTimestamp - Optional parameter to adjust the timestamp of the trimmed video.
  * @returns A promise that resolves to the path of the trimmed video as a blob URL.
  */
-export function trimVideo(file: File, startSec: string, endSec: string, tweakTimestamp?: boolean): Promise<string> 
+export function trimVideo(file: File, startSec: string, endSec: string, tweakTimestamp?: boolean): Promise<string>
 
 /**
  * Trims a video file and returns the resulting video as an ArrayBuffer.
@@ -135,7 +135,7 @@ export async function trimVideo(file: File | string, startSec: string, endSec: s
         });
     }
 
-    
+
 };
 
 export const getVideoInfoFromPath = async (filePath: string): Promise<VideoInfo> => {
@@ -149,4 +149,36 @@ export const getVideoInfoFromPath = async (filePath: string): Promise<VideoInfo>
         });
         nodeWorker.postMessage({ type: 'get_video_info', filePath });
     });
+}
+
+export const resizeImageToWebP = async (file: File | string, resizeWidth: number, resizeHeight: number): Promise<string | ArrayBuffer> => {
+    if (typeof file === 'string') {
+        if (!nodeWorker) {
+            throw new Error('This function can only be used in a Node.js environment.');
+        }
+
+        return new Promise((resolve, reject) => {
+            nodeWorker.on('message', (data: ArrayBuffer) => {
+                resolve(data);
+            });
+            nodeWorker.postMessage({ type: 'reseize_image', filePath: file, resizeWidth, resizeHeight });
+        });
+    } else {
+        if (!browserWorker) {
+            throw new Error('This function can only be used in a browser environment.');
+        }
+
+        return new Promise((resolve, reject) => {
+            browserWorker.onmessage = (e: MessageEvent) => {
+                const data = e.data;
+                if (data.error) {
+                    reject(data.error);
+                } else {
+                    resolve(data);
+                }
+            };
+
+            browserWorker.postMessage(['reseize_image', file, resizeWidth, resizeHeight]);
+        });
+    }
 }

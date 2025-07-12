@@ -10,10 +10,6 @@
         "ghcr.io/devcontainers-extra/features/pnpm:2": {},
         "ghcr.io/devcontainers/features/docker-from-docker:1": {}
     },
-    "runArgs": [
-        "-p",
-        "127.0.0.1:5173:5173"
-    ],
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
     "workspaceFolder": "/workspace",
     "remoteUser": "ubuntu",
@@ -21,7 +17,6 @@
     "customizations": {
         "vscode": {
             "extensions": [
-                "vue.volar",
                 "dbaeumer.vscode-eslint",
                 "rvest.vs-code-prettier-eslint",
                 "editorconfig.editorconfig",

@@ -1,4 +1,4 @@
-FROM emscripten/emsdk:4.0.8 as build
+FROM emscripten/emsdk:4.0.21 as build
 
 ARG PREFIX=/opt/ffmpeg
 

@@ -20,6 +20,7 @@ self.onmessage = async (e: MessageEvent) => {
                 ikaria.FS.mount(ikaria.FS.filesystems.WORKERFS, { files: [file] }, '/work');
 
                 // Call the wasm module.
+                // @ts-expect-error
                 const info = ikaria.getVideoInfo('/work/' + file.name);
 
                 const keyframes = [];
@@ -42,7 +43,7 @@ self.onmessage = async (e: MessageEvent) => {
                 // Cleanup mount.
                 ikaria.FS.unmount('/work');
                 break;
-        
+
             case 'trim_video':
                 const startSec = e.data[2];
                 const endSec = e.data[3];
@@ -55,6 +56,7 @@ self.onmessage = async (e: MessageEvent) => {
 
                 ikaria.FS.mount(ikaria.FS.filesystems.WORKERFS, { files: [file] }, '/work');
 
+                // @ts-expect-error
                 ikaria.trimingWebM('/work/' + file.name, '/trimed_' + file.name, startSec, endSec, tweakTimestamp);
 
                 const trimmedFileBuffer = ikaria.FS.readFile('/trimed_' + file.name);
@@ -66,7 +68,7 @@ self.onmessage = async (e: MessageEvent) => {
                 // Cleanup mount.
                 ikaria.FS.unmount('/work');
                 break;
-            
+
             default:
                 break;
         }

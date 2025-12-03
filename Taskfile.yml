@@ -77,8 +77,8 @@ tasks:
         --enable-swscale \
         --enable-protocol=file \
         --enable-decoder=aac,pcm_s16le,mp3 \
-        --enable-demuxer=mov,matroska,mp3,webm \
-        --enable-muxer=mp4,webm \
+        --enable-demuxer=dash,mov,matroska,mp3,webm \
+        --enable-muxer=dash,mp4,webm \
         --disable-gpl \
         --enable-libvpx \
         --enable-libopus \
@@ -121,7 +121,7 @@ tasks:
         -lavcodec -lavformat -lavfilter -lavdevice -lswresample -lswscale -lavutil -lm -lnodefs.js -lidbfs.js -lworkerfs.js \
         -pthread \
         -o js/src/ikaria-wasm.js \
-        src/ikaria.cpp
+        src/dash.cpp
 
 
 

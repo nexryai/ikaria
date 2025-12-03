@@ -9,6 +9,67 @@ type VideoInfo = {
     keyframes: string[];
 }
 
+export async function readFile(file: string): Promise<Uint8Array<any>> {
+    if (!browserWorker) {
+        throw new Error('This function can only be used in a browser environment.');
+    }
+
+    return new Promise((resolve, reject) => {
+        browserWorker.onmessage = (e: MessageEvent) => {
+            const data = e.data;
+            if (data.error) {
+                reject(data.error);
+            } else if (data.file) {
+                resolve(data.file);
+            }
+        };
+
+        console.log('Worker: Sending read request', file);
+        browserWorker.postMessage(['read_file', file]);
+    });
+}
+
+export async function readDir(path: string): Promise<Array<string>> {
+    if (!browserWorker) {
+        throw new Error('This function can only be used in a browser environment.');
+    }
+
+    return new Promise((resolve, reject) => {
+        browserWorker.onmessage = (e: MessageEvent) => {
+            const data = e.data;
+            if (data.error) {
+                reject(data.error);
+            } else if (data.files) {
+                console.log(data)
+                resolve(data.files);
+            }
+        };
+
+        console.log('Worker: Sending read request', path);
+        browserWorker.postMessage(['read_dir', path]);
+    });
+}
+
+export async function remuxToDash(file: string): Promise<void> {
+    if (!browserWorker) {
+        throw new Error('This function can only be used in a browser environment.');
+    }
+
+    return new Promise((resolve, reject) => {
+        browserWorker.onmessage = (e: MessageEvent) => {
+            const data = e.data;
+            if (data.error) {
+                reject(data.error);
+            } else {
+                resolve();
+            }
+        };
+
+        console.log('Worker: Sending file info request', file);
+        browserWorker.postMessage(['remux_to_dash', file]);
+    });
+}
+
 export async function getVideoInfo(file: File | string): Promise<VideoInfo> {
     if (!browserWorker) {
         throw new Error('This function can only be used in a browser environment.');

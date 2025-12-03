@@ -8,6 +8,12 @@ import { VantResolver } from "@vant/auto-import-resolver"
 // https://vite.dev/config/
 export default defineConfig({
   server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+    },
     fs: {
       allow: [
         ".."
@@ -23,4 +29,12 @@ export default defineConfig({
       resolvers: [VantResolver()],
     }),
   ],
+  preview: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+    },
+  },
 })

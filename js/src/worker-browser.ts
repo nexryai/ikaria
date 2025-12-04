@@ -19,7 +19,7 @@ self.onmessage = async (e: MessageEvent) => {
                 console.log("Starting....")
                 ikaria.remuxToDash(file, `/out/manifest.mpd`)
                 console.log("Done!");
-
+                postMessage({ result: "ok" });
 
             default:
                 break;

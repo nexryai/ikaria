@@ -61,7 +61,7 @@ export async function remuxToDash(file: string): Promise<void> {
             if (data.error) {
                 reject(data.error);
             } else {
-                resolve();
+                data?.result === "ok" ? resolve() : reject("Failed");
             }
         };
 

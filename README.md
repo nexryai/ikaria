@@ -29,7 +29,7 @@ docker compose run --build ikaria task build
 
 #### Debug UI にアクセス
 ```
-cd www
+cd demo
 pnpm install
 pnpm dev
 ```

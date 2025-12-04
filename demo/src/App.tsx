@@ -1,0 +1,116 @@
+import React, { useState, useCallback } from 'react';
+import { remuxToDash } from '../../js/src';
+import VideoPlayer from './components/VideoPlayer';
+const DashConverterPage: React.FC = () => {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string>('ファイルをアップロードしてください');
+  const [playerKey, setPlayerKey] = useState<number>(0); // プレイヤーをリロードするためのキー
+  const [showPlayer, setShowPlayer] = useState(false);
+
+  // ---------------------------------------------------------
+  // 1. ファイル選択時の処理 (ユーザー要望のロジック)
+  // ---------------------------------------------------------
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const selectedFile = files[0];
+    setIsProcessing(true);
+    setStatusMessage('OPFSへ書き込み中...');
+    setShowPlayer(false); // 変換中はプレイヤーを隠す
+
+    try {
+      const opfsRoot = await navigator.storage.getDirectory();
+
+      const fileHandle = await opfsRoot.getFileHandle(selectedFile.name, { create: true });
+
+      const writable = await fileHandle.createWritable();
+      await writable.write(selectedFile);
+      await writable.close();
+
+      console.log("Written to OPFS via JS");
+
+      setStatusMessage('変換中 (remuxToDash)...');
+
+      // ffmpegの処理を実行
+      // 注意: remuxToDashが非同期関数(Promiseを返す)であることを想定しています。
+      // もし同期関数の場合は await を外してください。
+      await remuxToDash(`/opfs/${selectedFile.name}`);
+      // --- 提供されたロジックここまで ---
+
+      setStatusMessage('変換完了。再生準備OK');
+      setShowPlayer(true);
+      setPlayerKey(prev => prev + 1); // プレイヤーを強制的に再マウントしてリロード
+
+    } catch (error) {
+      console.error('Processing Error:', error);
+      setStatusMessage(`エラーが発生しました: ${error}`);
+    } finally {
+      setIsProcessing(false);
+      // inputの値をリセット（同じファイルを再度選べるように）
+      event.target.value = '';
+    }
+  };
+
+  // ---------------------------------------------------------
+  // 2. OPFSの中身を空にするデバッグ用ボタン
+  // ---------------------------------------------------------
+  const clearOpfs = async () => {
+    if (!window.confirm('OPFS内の全データを削除しますか？')) return;
+
+    try {
+      const root = await navigator.storage.getDirectory();
+      // 再帰的に削除
+      // @ts-ignore - TSのバージョンによってはvalues()の型定義が不足している場合があるため
+      for await (const name of root.keys()) {
+        await root.removeEntry(name, { recursive: true });
+      }
+
+      console.log('OPFS Cleared');
+      setStatusMessage('OPFSを空にしました');
+      setShowPlayer(false);
+    } catch (error) {
+      console.error('Clear OPFS Error:', error);
+      setStatusMessage('削除に失敗しました');
+    }
+  };
+
+  return (
+    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
+      <h1>WebM to DASH Converter (OPFS)</h1>
+
+      <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ccc', borderRadius: '8px' }}>
+        <h3>1. ファイルを選択して変換</h3>
+        <input
+          type="file"
+          accept="video/webm,video/mp4"
+          onChange={handleFileChange}
+          disabled={isProcessing}
+        />
+        <p style={{ color: isProcessing ? 'blue' : 'black' }}>
+          <strong>Status:</strong> {statusMessage}
+        </p>
+      </div>
+
+      {showPlayer && (
+        <div style={{ marginBottom: '20px' }}>
+          <h3>2. プレビュー再生</h3>
+          {/* keyを変更することで、変換のたびにプレイヤーを完全にリセットする */}
+          <VideoPlayer key={playerKey} />
+        </div>
+      )}
+
+      <div style={{ marginTop: '40px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+        <h3>Debug Tools</h3>
+        <button
+          onClick={clearOpfs}
+          style={{ backgroundColor: '#ff4444', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+        >
+          OPFSの中身をすべて削除
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default DashConverterPage;

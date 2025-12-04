@@ -1,6 +1,30 @@
 import React, { useState } from 'react';
 import { remuxToDash } from '../../js/src';
 import VideoPlayer from './components/VideoPlayer';
+
+/**
+ * ブラウザに永続ストレージの許可をリクエストする
+ * FirefoxではOPFSにデフォルトで10GiBまでしか保存できないため、永続データの権限を要求してより多くのスペースを確保する
+ */
+const requestPersistentStorage = async(): Promise<boolean> => {
+  if (navigator.storage && navigator.storage.persist) {
+
+    const isAlreadyPersisted = await navigator.storage.persisted();
+    if (isAlreadyPersisted) {
+      console.log("Storage is already persisted.");
+      return true;
+    }
+
+    const isPersisted = await navigator.storage.persist();
+    console.log(`Storage persistence granted: ${isPersisted}`);
+
+    return isPersisted;
+  } else {
+    console.warn("StorageManager API is not supported in this browser.");
+    return false;
+  }
+}
+
 const DashConverterPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string>('ファイルをアップロードしてください');
@@ -10,6 +34,10 @@ const DashConverterPage: React.FC = () => {
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
+
+    if (await !requestPersistentStorage()) {
+        console.warn("PersistentStorage is not allowed.")
+    }
 
     const selectedFile = files[0];
     setIsProcessing(true);

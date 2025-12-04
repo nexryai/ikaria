@@ -1,15 +1,12 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { remuxToDash } from '../../js/src';
 import VideoPlayer from './components/VideoPlayer';
 const DashConverterPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string>('ファイルをアップロードしてください');
-  const [playerKey, setPlayerKey] = useState<number>(0); // プレイヤーをリロードするためのキー
+  const [playerKey, setPlayerKey] = useState<number>(0);
   const [showPlayer, setShowPlayer] = useState(false);
 
-  // ---------------------------------------------------------
-  // 1. ファイル選択時の処理 (ユーザー要望のロジック)
-  // ---------------------------------------------------------
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -17,7 +14,7 @@ const DashConverterPage: React.FC = () => {
     const selectedFile = files[0];
     setIsProcessing(true);
     setStatusMessage('OPFSへ書き込み中...');
-    setShowPlayer(false); // 変換中はプレイヤーを隠す
+    setShowPlayer(false);
 
     try {
       const opfsRoot = await navigator.storage.getDirectory();
@@ -32,36 +29,27 @@ const DashConverterPage: React.FC = () => {
 
       setStatusMessage('変換中 (remuxToDash)...');
 
-      // ffmpegの処理を実行
-      // 注意: remuxToDashが非同期関数(Promiseを返す)であることを想定しています。
-      // もし同期関数の場合は await を外してください。
       await remuxToDash(`/opfs/${selectedFile.name}`);
-      // --- 提供されたロジックここまで ---
 
       setStatusMessage('変換完了。再生準備OK');
       setShowPlayer(true);
-      setPlayerKey(prev => prev + 1); // プレイヤーを強制的に再マウントしてリロード
+      setPlayerKey(prev => prev + 1);
 
     } catch (error) {
       console.error('Processing Error:', error);
       setStatusMessage(`エラーが発生しました: ${error}`);
     } finally {
       setIsProcessing(false);
-      // inputの値をリセット（同じファイルを再度選べるように）
       event.target.value = '';
     }
   };
 
-  // ---------------------------------------------------------
-  // 2. OPFSの中身を空にするデバッグ用ボタン
-  // ---------------------------------------------------------
   const clearOpfs = async () => {
     if (!window.confirm('OPFS内の全データを削除しますか？')) return;
 
     try {
       const root = await navigator.storage.getDirectory();
-      // 再帰的に削除
-      // @ts-ignore - TSのバージョンによってはvalues()の型定義が不足している場合があるため
+      // @ts-ignore
       for await (const name of root.keys()) {
         await root.removeEntry(name, { recursive: true });
       }
@@ -95,7 +83,6 @@ const DashConverterPage: React.FC = () => {
       {showPlayer && (
         <div style={{ marginBottom: '20px' }}>
           <h3>2. プレビュー再生</h3>
-          {/* keyを変更することで、変換のたびにプレイヤーを完全にリセットする */}
           <VideoPlayer key={playerKey} />
         </div>
       )}

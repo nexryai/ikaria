@@ -1,0 +1,38 @@
+name: Test Building CI
+on: [push, pull_request]
+permissions: {}
+
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          echo "DOCKER_COMPOSE_SRC_VOLUME_DIR=./" > .env
+          docker compose run ikaria task build
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install pnpm
+        working-directory: js
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        working-directory: js
+        run: pnpm install
+
+      - name: Build package
+        working-directory: js
+        run: pnpm build

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { remuxToDash } from '../../js/dist';
+import { remuxToDash } from '../../js/src';
 import VideoPlayer from './components/VideoPlayer';
 
 /**

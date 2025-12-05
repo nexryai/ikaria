@@ -20,14 +20,11 @@
     "customizations": {
         "vscode": {
             "extensions": [
-                "dbaeumer.vscode-eslint",
-                "rvest.vs-code-prettier-eslint",
                 "editorconfig.editorconfig",
                 "llvm-vs-code-extensions.vscode-clangd"
             ],
             "settings": {
                 "editor.linkedEditing": true,
-                "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
                 "editor.formatOnPaste": true,
                 "editor.formatOnSave": false,
                 "html.format.wrapLineLength": 0,

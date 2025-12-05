@@ -3,6 +3,7 @@ import dts from 'vite-plugin-dts';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
+  base: './',
   build: {
     lib: {
       entry: 'src/index.ts',
@@ -15,7 +16,7 @@ export default defineConfig({
     },
   },
   worker: {
-    format: 'es'
+    format: 'es',
   },
   plugins: [
     dts({
@@ -25,6 +26,10 @@ export default defineConfig({
       targets: [
         {
           src: 'src/ikaria-wasm.wasm',
+          dest: '.'
+        },
+        {
+          src: 'src/ikaria-wasm.js',
           dest: '.'
         }
       ]

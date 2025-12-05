@@ -2,7 +2,7 @@ import Ikaria from './ikaria-wasm.js';
 
 console.log('Worker: Starting worker');
 
-self.onmessage = async (e: MessageEvent) => {
+self.onmessage = async (e) => {
     try {
         console.log('Worker: Received message', e.data);
         const type = e.data[0];
@@ -24,7 +24,7 @@ self.onmessage = async (e: MessageEvent) => {
             default:
                 break;
         }
-    } catch (error: any) {
+    } catch (error) {
         postMessage({ error: error.message });
     }
 }

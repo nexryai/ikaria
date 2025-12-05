@@ -1,6 +1,7 @@
-import browserWorker from "./worker-browser"
+import wasmWorker from "./worker-browser?worker"
 
-//const browserWorker = new window.Worker(new URL("./worker-browser?worker", import.meta.url), { type: 'module' });
+// const browserWorker = new window.Worker(new URL("./worker-browser", import.meta.url), { type: 'module' });
+const browserWorker = new wasmWorker();
 
 type VideoInfo = {
     duration: number;

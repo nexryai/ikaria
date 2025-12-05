@@ -31,11 +31,11 @@ jobs:
       - name: Install pnpm
         working-directory: js
         run: npm install -g pnpm
-      
+
       - name: Install dependencies
         working-directory: js
         run: pnpm install
-        
+
 
       - name: Build package
         working-directory: js
@@ -43,6 +43,4 @@ jobs:
 
       - name: Publish to NPM
         working-directory: js
-        run: pnpm publish --no-git-checks --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} 
+        run: pnpm publish --no-git-checks

@@ -1,4 +1,6 @@
-const browserWorker = new window.Worker(new URL("./worker-browser", import.meta.url), { type: 'module' });
+import browserWorker from "./worker-browser"
+
+//const browserWorker = new window.Worker(new URL("./worker-browser?worker", import.meta.url), { type: 'module' });
 
 type VideoInfo = {
     duration: number;

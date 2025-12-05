@@ -28,3 +28,5 @@ self.onmessage = async (e: MessageEvent) => {
         postMessage({ error: error.message });
     }
 }
+
+export default self;

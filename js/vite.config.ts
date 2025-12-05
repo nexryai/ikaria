@@ -27,10 +27,6 @@ export default defineConfig({
         {
           src: 'src/ikaria-wasm.wasm',
           dest: '.'
-        },
-        {
-          src: 'src/ikaria-wasm.js',
-          dest: '.'
         }
       ]
     })

@@ -80,7 +80,6 @@ tasks:
         --enable-demuxer=dash,mov,matroska,mp3,webm \
         --enable-muxer=dash,mp4,webm \
         --disable-gpl \
-        –-disable-nonfree \
         --enable-libvpx \
         --enable-libopus \
         --enable-libmp3lame \

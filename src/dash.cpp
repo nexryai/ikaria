@@ -106,7 +106,7 @@ void remuxToDash(std::string inputPath, std::string outputPath) {
     // av_dict_set(&opts, "format", "webm", 0);
 
     if (!(ofmt_ctx->oformat->flags & AVFMT_NOFILE)) {
-        ret = avio_open(&ofmt_ctx->pb, outputPath.c_str(), AVIO_FLAG_WRITE);
+        ret = avio_open(&ofmt_ctx->pb, outputPathOPFS.c_str(), AVIO_FLAG_WRITE);
         check_error(ret, "Could not open output file");
     }
 

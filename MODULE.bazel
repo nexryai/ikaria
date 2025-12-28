@@ -1,5 +1,5 @@
 module(
-    name = "ikaria_project",
+    name = "ikaria",
     version = "1.0.0",
 )
 

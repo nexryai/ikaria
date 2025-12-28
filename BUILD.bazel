@@ -90,17 +90,19 @@ configure_make(
         "--enable-libopus",
         "--enable-libmp3lame",
         "--enable-libwebp",
+
         "--extra-cflags='%s'" % COMMON_FLAGS,
         "--extra-cxxflags='%s'" % COMMON_FLAGS,
         "--extra-ldflags='%s'" % LDFLAGS_COMMON,
-        "--nm='llvm-nm -g'",
-        "--ar=emar",
-        "--as=llvm-as",
-        "--ranlib=emranlib",
-        "--cc=emcc",
-        "--cxx=em++",
-        "--objcc=emcc",
-        "--dep-cc=emcc",
+
+        "--cc=$$EXT_BUILD_ROOT/$(CC)",
+        "--cxx=$$EXT_BUILD_ROOT/$(CC)",
+        "--ar=$$EXT_BUILD_ROOT/$(AR)",
+        "--nm=$$EXT_BUILD_ROOT/$(NM)",
+        "--ranlib=:",
+        "--as=$$EXT_BUILD_ROOT/$(CC)",
+        "--objcc=$$EXT_BUILD_ROOT/$(CC)",
+        "--dep-cc=$$EXT_BUILD_ROOT/$(CC)",
     ],
     env = {
         "CFLAGS": COMMON_FLAGS,
@@ -110,7 +112,7 @@ configure_make(
     lib_source = "@ffmpeg_source//:all_srcs",
     out_static_libs = [
         "libavcodec.a", "libavformat.a", "libavfilter.a", "libavdevice.a",
-        "libswresample.a", "libswscale.a", "libavutil.a", "libpostproc.a"
+        "libswresample.a", "libswscale.a", "libavutil.a"
     ],
     deps = [":libvpx", ":libopus", ":lame", ":libwebp"],
 )
@@ -118,20 +120,23 @@ configure_make(
 cc_binary(
     name = "ikaria_wasm_raw",
     srcs = ["src/dash.cpp"],
-    copts = [COMMON_FLAGS],
+    copts = [
+        COMMON_FLAGS,
+        "-fexceptions",
+    ],
     linkopts = [
         "-O3",
         "--bind",
         "-sEXPORTED_RUNTIME_METHODS=['FS','cwrap','ccall','getValue','setValue','writeAsciiToMemory']",
         "-sINITIAL_MEMORY=268435456",
         "-sEXPORT_ES6=1",
-        "--emit-tsd=ikaria-wasm.d.ts",
         "-sWASMFS",
         "-sFORCE_FILESYSTEM",
         "-sASSERTIONS",
         "-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency",
         "-pthread",
     ],
+    data = [":node_modules"],
     deps = [":ffmpeg"],
 )
 

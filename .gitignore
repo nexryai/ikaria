@@ -4,3 +4,6 @@ dist/
 .DS_Store
 
 .pnpm-store
+
+/bazel-*
+/MODULE.bazel.lock

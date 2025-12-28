@@ -1,5 +1,0 @@
-services:
-  ikaria:
-    build: .
-    volumes:
-      - "${DOCKER_COMPOSE_SRC_VOLUME_DIR}:/build"

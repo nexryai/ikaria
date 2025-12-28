@@ -4,24 +4,19 @@
         "dockerfile": "./Dockerfile"
     },
     "features": {
-        "ghcr.io/devcontainers/features/git:1": {"version": "latest"},
-        "ghcr.io/devcontainers/features/sshd:1": {},
         "ghcr.io/devcontainers/features/node:1": {},
         "ghcr.io/devcontainers-extra/features/pnpm:2": {},
-        "ghcr.io/devcontainers/features/docker-from-docker:1": {}
     },
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
     "workspaceFolder": "/workspace",
     "remoteUser": "ubuntu",
     "overrideCommand": true,
-    "remoteEnv": {
-        "DOCKER_COMPOSE_SRC_VOLUME_DIR": "${localWorkspaceFolder}"
-    },
     "customizations": {
         "vscode": {
             "extensions": [
                 "editorconfig.editorconfig",
-                "llvm-vs-code-extensions.vscode-clangd"
+                "llvm-vs-code-extensions.vscode-clangd",
+                "bazelbuild.vscode-bazel"
             ],
             "settings": {
                 "editor.linkedEditing": true,

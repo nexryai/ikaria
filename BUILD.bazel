@@ -1,0 +1,93 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+load("@emsdk//emscripten_toolchain:wasm_rules.bzl", "wasm_cc_binary")
+
+COMMON_FLAGS = "-s USE_PTHREADS=1 -O3"
+
+
+configure_make(
+    name = "libvpx",
+    configure_options = ["--target=generic-gnu", "--disable-examples", "--disable-unit-tests", "--enable-pic"],
+    lib_source = "@libvpx_source//:all_srcs",
+    out_static_libs = ["libvpx.a"],
+)
+
+configure_make(
+    name = "libopus",
+    autogen = True,
+    configure_in_place = True,
+    configure_options = ["--host=i686-none", "--enable-static", "--disable-shared", "--disable-asm"],
+    lib_source = "@libopus_source//:all_srcs",
+    out_static_libs = ["libopus.a"],
+)
+
+configure_make(
+    name = "lame",
+    configure_options = ["--host=i686-gnu", "--enable-static", "--disable-frontend"],
+    lib_source = "@lame_source//:all_srcs",
+    out_static_libs = ["libmp3lame.a"],
+)
+
+configure_make(
+    name = "libwebp",
+    autogen = True,
+    configure_in_place = True,
+    configure_options = ["--disable-shared"],
+    lib_source = "@libwebp_source//:all_srcs",
+    out_static_libs = ["libwebp.a"],
+)
+
+configure_make(
+    name = "ffmpeg",
+    configure_options = [
+        "--target-os=none",
+        "--arch=x86_32",
+        "--enable-cross-compile",
+        "--disable-x86asm",
+        "--disable-programs",
+        "--disable-all",
+        "--enable-avcodec",
+        "--enable-avformat",
+        "--enable-avfilter",
+        "--enable-avutil",
+        "--enable-swresample",
+        "--enable-swscale",
+        "--enable-libvpx",
+        "--enable-libopus",
+        "--enable-libmp3lame",
+        "--enable-libwebp",
+        "--cc=emcc",
+        "--cxx=em++",
+        "--ar=emar",
+        "--nm=llvm-nm",
+        "--ranlib=emranlib",
+    ],
+    env = {"CFLAGS": COMMON_FLAGS, "LDFLAGS": COMMON_FLAGS},
+    lib_source = "@ffmpeg_source//:all_srcs",
+    out_static_libs = ["libavcodec.a", "libavformat.a", "libavutil.a", "libswresample.a", "libswscale.a"],
+    deps = [":libvpx", ":libopus", ":lame", ":libwebp"],
+)
+
+cc_binary(
+    name = "ikaria_wasm_raw",
+    srcs = ["src/dash.cpp"],
+    copts = [COMMON_FLAGS],
+    linkopts = [
+        COMMON_FLAGS,
+        "--bind",
+        "-sEXPORTED_RUNTIME_METHODS=['FS','cwrap','ccall','getValue','setValue','writeAsciiToMemory']",
+        "-sINITIAL_MEMORY=268435456",
+        "-sEXPORT_ES6=1",
+        "-sWASMFS",
+        "-sFORCE_FILESYSTEM",
+        "-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency",
+        "-pthread",
+    ],
+    deps = [":ffmpeg"],
+)
+
+wasm_cc_binary(
+    name = "ikaria_wasm",
+    cc_target = ":ikaria_wasm_raw",
+    outputs = ["ikaria-wasm.js", "ikaria-wasm.wasm"],
+)

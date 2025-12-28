@@ -17,6 +17,7 @@ self.onmessage = async (e: MessageEvent) => {
 
             case 'remux_to_dash':
                 console.log("Starting....")
+                // @ts-ignore
                 ikaria.remuxToDash(file, `/out/manifest.mpd`)
                 console.log("Done!");
                 postMessage({ result: "ok" });

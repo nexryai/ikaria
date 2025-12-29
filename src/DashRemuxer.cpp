@@ -42,6 +42,9 @@ void DashRemuxer::init_opfs() {
 }
 
 void DashRemuxer::process(std::string inputPath, std::string outputPath, bool use_opfs) {
+    const std::string format = inputPath.substr(inputPath.find_last_of('.') + 1);
+    const std::string targetFormat = format == "mov" ? "mp4" : format;
+
     std::string finalOutputPath = outputPath;
     if (use_opfs) {
         init_opfs();
@@ -83,8 +86,8 @@ void DashRemuxer::process(std::string inputPath, std::string outputPath, bool us
     AVDictionary* opts_raw = nullptr;
     av_dict_set(&opts_raw, "window_size", "0", 0);
     av_dict_set(&opts_raw, "seg_duration", "4", 0);
-    av_dict_set(&opts_raw, "init_seg_name", "init_$RepresentationID$.webm", 0);
-    av_dict_set(&opts_raw, "media_seg_name", "chunk_$RepresentationID$_$Number$.webm", 0);
+    av_dict_set(&opts_raw, "init_seg_name", ("init_$RepresentationID$." + targetFormat).c_str(), 0);
+    av_dict_set(&opts_raw, "media_seg_name", ("chunk_$RepresentationID$_$Number$." + targetFormat).c_str(), 0);
     DictionaryPtr opts(opts_raw);
 
     if (!(ofmt_ctx->oformat->flags & AVFMT_NOFILE)) {

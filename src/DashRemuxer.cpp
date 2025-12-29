@@ -51,8 +51,13 @@ void DashRemuxer::process(std::string inputPath, std::string outputPath, bool us
     ensure_directory(finalOutputPath);
 
     AVFormatContext* ifmt_raw = nullptr;
-    if (avformat_open_input(&ifmt_raw, inputPath.c_str(), nullptr, nullptr) < 0) {
-        throw std::runtime_error("Could not open input");
+    int ret = avformat_open_input(&ifmt_raw, inputPath.c_str(), nullptr, nullptr);
+    if (ret < 0) {
+        char errbuf[256];
+        av_strerror(ret, errbuf, sizeof(errbuf));
+
+        std::string msg = "Could not open input: " + inputPath + " (Error: " + errbuf + ", Code: " + std::to_string(ret) + ")";
+        throw std::runtime_error(msg);
     }
 
     FormatContextPtr ifmt_ctx(ifmt_raw);

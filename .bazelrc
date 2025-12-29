@@ -1,3 +1,12 @@
 common --enable_bzlmod
 
 build --incompatible_enable_cc_toolchain_resolution
+
+build:wasm --platforms=//:wasm_platform
+
+# Use clang for testing
+build:native --platforms=//:host_platform
+build:native --repo_env=CC=clang-21
+build:native --repo_env=CXX=clang++-21
+
+test:native --config=native

@@ -1,0 +1,41 @@
+name: Unit Testing CI
+on: [push, pull_request]
+permissions: {}
+
+
+jobs:
+  build:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git curl wget autoconf automake libtool pkg-config gnupg
+          curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
+          sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+          sudo sh -c "echo 'deb http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main' >> /etc/apt/sources.list"
+          sudo sh -c "echo 'deb-src http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main' >> /etc/apt/sources.list"
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo apt-get update && sudo apt-get install -y bazel clang-21
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Execute bazel
+        run: bazel test --config=native //:dash_remuxer_test --test_output=all

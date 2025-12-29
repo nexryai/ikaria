@@ -5,7 +5,7 @@ WIP: ffmpegを利用した、WASMで動作するGPL/特許フリーのメディ�
 ```bash
 bazel run @hedron_compile_commands//:refresh_all
 
-bazel test --config=native //:dash_remuxer_test
+bazel test --config=native //:dash_remuxer_test --test_output=all
 
 bazel build --config=wasm //:ikaria_wasm
 ```

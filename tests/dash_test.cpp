@@ -143,7 +143,10 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Values(
         DashTestParam{"big-buck-bunny_trailer_h264.mov", 5, 30},
         DashTestParam{"big-buck-bunny_trailer_vp8.webm", 0, 4},
-        DashTestParam{"Tears of Steel - Blender VFX Open Movie [R6MlUcmOul8].mp4", 0, 4}
+        DashTestParam{"Tears of Steel in 4k - Official Blender Foundation release [OHOpb2fS-cM] (mp4a).mkv", 0, 0},
+        DashTestParam{"Tears of Steel in 4k - Official Blender Foundation release [OHOpb2fS-cM] (opus).webm", 0, 2},
+        DashTestParam{"Tears of Steel in 4k - Official Blender Foundation release [OHOpb2fS-cM] (av1).webm", 0, 2},
+        DashTestParam{"No Copyright, Copyright Free Videos, sunset, beach, sea, waves [Eoo4HzILB-M].mp4", 0, 0}
     ),
     [](const ::testing::TestParamInfo<DashRemuxerTest::ParamType>& info) {
         std::string name = info.param.filename;

@@ -1,6 +1,15 @@
 ## `ikaria (Ikaria.js)`
 WIP: ffmpegを利用した、WASMで動作するGPL/特許フリーのメディア処理ライブラリ
 
+### Develop
+```bash
+bazel run @hedron_compile_commands//:refresh_all
+
+bazel test --config=native //:dash_remuxer_test
+
+bazel build --config=wasm //:ikaria_wasm
+```
+
 ### Legal
 本ライブラリで使用しているffmpegは`--disable-gpl`フラグを使用してビルドしているため、このライブラリのリンクによってGPLの派生条項が適用されることはないと本ライブラリの開発者は認識しています。
 またH.264などの一般的に特許が絡むとされているコーデックのデコーダー/エンコーダーもリンクしておらず、本ライブラリはそれらのコーデックに対応していません。

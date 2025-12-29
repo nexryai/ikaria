@@ -43,7 +43,7 @@ void DashRemuxer::init_opfs() {
 
 void DashRemuxer::process(std::string inputPath, std::string outputPath, bool use_opfs) {
     const std::string format = inputPath.substr(inputPath.find_last_of('.') + 1);
-    const std::string targetFormat = format == "mov" ? "mp4" : format;
+    const std::string targetFormat = format == "mov" || format == "mkv" ? "mp4" : format;
 
     std::string finalOutputPath = outputPath;
     if (use_opfs) {

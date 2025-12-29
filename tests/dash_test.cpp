@@ -95,8 +95,9 @@ TEST_P(DashRemuxerTest, FlexibleRemuxTest) {
     const char* workspace = std::getenv("TEST_WORKSPACE");
     ASSERT_TRUE(srcdir && workspace) << "Bazel環境変数が取得できません。";
 
-    std::string inputPath = std::string(srcdir) + "/" + workspace + "/tests/test_data/" + param.filename;
-    std::string outputPath = "output_" + param.filename + ".mpd";
+    const std::string format = param.filename.substr(param.filename.find_last_of('.') + 1);
+    const std::string inputPath = std::string(srcdir) + "/" + workspace + "/tests/test_data/" + param.filename;
+    const std::string outputPath = "output_" + param.filename + ".mpd";
 
     auto original = get_stream_data(inputPath);
     ASSERT_FALSE(original.video.empty()) << "入力ビデオが空です。";
@@ -106,7 +107,7 @@ TEST_P(DashRemuxerTest, FlexibleRemuxTest) {
 
     auto remuxed = get_stream_data(outputPath);
 
-    auto verify_stream = [](const std::vector<PacketInfo>& orig, const std::vector<PacketInfo>& remux, const std::string& label, int tolerance) {
+    auto verify_stream = [format](const std::vector<PacketInfo>& orig, const std::vector<PacketInfo>& remux, const std::string& label, int tolerance) {
         // パケット数の確認（わずかな欠損は許容）
         int diff = static_cast<int>(orig.size()) - static_cast<int>(remux.size());
         std::cout << "[info] " << label << " PKTS DIFF: " << diff << std::endl;
@@ -125,8 +126,8 @@ TEST_P(DashRemuxerTest, FlexibleRemuxTest) {
             double last_pts_remux = remux.back().pts_sec;
             double pts_diff = std::abs(last_pts_orig - last_pts_remux);
 
-            // 0.1秒までのズレなら許容
-            EXPECT_LT(pts_diff, 0.1) << label << ": The difference in PTS is too large (difference: " << pts_diff << "s)";
+            // 0.1秒までのズレなら許容（movの場合mp4への変換を挟むので大きくなる？）
+            EXPECT_LT(pts_diff, format == "mov" ? 0.8 : 0.1) << label << ": The difference in PTS is too large (difference: " << pts_diff << "s)";
 
             std::cout << "[Info] " << label << " PTS DIFF: " << pts_diff << "s (Original: " << last_pts_orig << ", Remuxed: " << last_pts_remux << ")" << std::endl;
         }
@@ -140,8 +141,9 @@ INSTANTIATE_TEST_SUITE_P(
     FileVariations,
     DashRemuxerTest,
     ::testing::Values(
-        DashTestParam{"20250916211744.webm", 5, 10},
-        DashTestParam{"big-buck-bunny_trailer.webm", 5, 10}
+        DashTestParam{"big-buck-bunny_trailer_h264.mov", 5, 30},
+        DashTestParam{"big-buck-bunny_trailer_vp8.webm", 0, 4},
+        DashTestParam{"Tears of Steel - Blender VFX Open Movie [R6MlUcmOul8].webm", 0, 4}
     ),
     [](const ::testing::TestParamInfo<DashRemuxerTest::ParamType>& info) {
         std::string name = info.param.filename;

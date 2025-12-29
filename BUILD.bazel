@@ -203,8 +203,11 @@ cc_test(
     name = "dash_remuxer_test",
     srcs = ["tests/dash_test.cpp"],
     data = [
-        "tests/test_data/20250916211744.webm",
-        "tests/test_data/big-buck-bunny_trailer.webm"
+        "tests/test_data/big-buck-bunny_trailer_h264.mov",
+        "tests/test_data/big-buck-bunny_trailer_vp8.webm",
+        "tests/test_data/Tears of Steel - Blender VFX Open Movie [R6MlUcmOul8].webm",
+        "tests/test_data/Tears of Steel in 4k - Official Blender Foundation release [OHOpb2fS-cM] (mp4a).mkv",
+        "tests/test_data/Tears of Steel in 4k - Official Blender Foundation release [OHOpb2fS-cM] (opus).webm"
     ],
     deps = [
         ":ikaria_lib",

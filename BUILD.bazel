@@ -103,7 +103,16 @@ configure_make(
             "--objcc=$$EXT_BUILD_ROOT/$(CC)",
             "--dep-cc=$$EXT_BUILD_ROOT/$(CC)",
         ],
-        "//conditions:default": [],
+        "//conditions:default": [
+            "--cc=$(CC)",
+            "--cxx=$(CC)",
+            "--ar=$(AR)",
+            "--nm=$(NM)",
+            "--ranlib=:",
+            "--as=$(CC)",
+            "--objcc=$(CC)",
+            "--dep-cc=$(CC)",
+        ],
     }),
     env = select({
         "@platforms//cpu:wasm32": {

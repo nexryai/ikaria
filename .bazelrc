@@ -10,5 +10,4 @@ build --repo_env=BAZEL_CONLYOPTS="-std=gnu17"
 
 build:wasm --platforms=//:wasm_platform
 
-test:native --config=native
 build:native --platforms=//:host_platform

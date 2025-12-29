@@ -1,5 +1,7 @@
-#include <emscripten/bind.h>
 #include "DashRemuxer.hpp"
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten/bind.h>
 
 using namespace emscripten;
 
@@ -8,3 +10,4 @@ EMSCRIPTEN_BINDINGS(dash_remuxer_module) {
         .constructor<>()
         .function("process", &DashRemuxer::process);
 }
+#endif

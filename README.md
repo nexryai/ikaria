@@ -1,7 +1,11 @@
-## `ikaria (Ikaria.js)`
-WIP: ffmpegを利用した、WASMで動作するGPL/特許フリーのメディア処理ライブラリ
+# `ikaria (Ikaria.js)`
+A GPL/patent-free browser-side media processing library using ffmpeg that runs on WASM.
 
-### Develop
+## Features
+- Unlike ffmpeg.wasm, this library uses OPFS for all operations. It can remux even large files that exceed memory size.
+- Currently, it only supports converting video files to DASH, but plans to support more operations in the future.
+
+## Develop
 ```bash
 bazel run @hedron_compile_commands//:refresh_all
 
@@ -10,8 +14,11 @@ bazel test --config=native //:dash_remuxer_test --test_output=all
 bazel build --config=wasm //:ikaria_wasm
 ```
 
-### Legal
-本ライブラリで使用しているffmpegは`--disable-gpl`フラグを使用してビルドしているため、このライブラリのリンクによってGPLの派生条項が適用されることはないと本ライブラリの開発者は認識しています。
-またH.264などの一般的に特許が絡むとされているコーデックのデコーダー/エンコーダーもリンクしておらず、本ライブラリはそれらのコーデックに対応していません。
-ただしこれらは本ライブラリの使用によって発生した法的な問題の責任を利用者が回避できるということではありません。
-このライブラリの利用によって発生したいかなる損害（法的責任の追求、訴訟などを含む）に対しても、本ライブラリの開発者、コントリビューター、所属団体、ライセンサーは一切の責任を負わないものとします。
+## Legal
+The ffmpeg used in this library was built using the `--disable-gpl` flag. The developer of this library recognizes that linking this library does not violate the GPL's derivative clauses.
+
+Furthermore, this library does not link decoders/encoders for codecs that are generally considered to be patent-protected, such as H.264, and does not support such codecs.
+
+However, this does not mean that users can avoid legal liability arising from the use of this library.
+
+The developers, contributors, affiliated organizations, and licensors of this library are not liable for any damages (including legal claims and lawsuits) arising from the use of this library.

@@ -1,21 +1,29 @@
-load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 load("@emsdk//emscripten_toolchain:wasm_rules.bzl", "wasm_cc_binary")
 
 COMMON_FLAGS = "-s USE_PTHREADS=1 -O3"
 LDFLAGS_COMMON = "-s USE_PTHREADS=1 -O3 -s INITIAL_MEMORY=33554432"
 
+platform(
+    name = "wasm_platform",
+    constraint_values = [
+        "@platforms//cpu:wasm32",
+        "@platforms//os:none",
+    ],
+)
+
+platform(
+    name = "host_platform",
+    constraint_values = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+    ],
+)
+
 configure_make(
     name = "libvpx",
-    configure_options = [
-        "--target=generic-gnu",
-        "--disable-examples",
-        "--disable-unit-tests",
-        "--disable-install-bins",
-        "--disable-tools",
-        "--disable-docs",
-        "--enable-pic",
-    ],
+    configure_options = ["--target=generic-gnu", "--disable-examples", "--disable-unit-tests", "--disable-install-bins", "--disable-tools", "--disable-docs", "--enable-pic"],
     lib_source = "@libvpx_source//:all_srcs",
     out_static_libs = ["libvpx.a"],
 )
@@ -24,27 +32,20 @@ configure_make(
     name = "libopus",
     autogen = True,
     configure_in_place = True,
-    configure_options = [
-        "--host=i686-none",
-        "--enable-static",
-        "--disable-shared",
-        "--disable-asm",
-        "--disable-rtcd",
-        "--disable-intrinsics",
-        "--disable-doc",
-        "--disable-extra-programs",
-    ],
+    configure_options = select({
+        "@platforms//cpu:wasm32": ["--host=i686-none"],
+        "//conditions:default": [],
+    }) + ["--enable-static", "--disable-shared", "--disable-asm", "--disable-rtcd", "--disable-intrinsics", "--disable-doc", "--disable-extra-programs"],
     lib_source = "@libopus_source//:all_srcs",
     out_static_libs = ["libopus.a"],
 )
 
 configure_make(
     name = "lame",
-    configure_options = [
-        "--host=i686-gnu",
-        "--enable-static",
-        "--disable-frontend",
-    ],
+    configure_options = select({
+        "@platforms//cpu:wasm32": ["--host=i686-gnu"],
+        "//conditions:default": [],
+    }) + ["--enable-static", "--disable-frontend"],
     lib_source = "@lame_source//:all_srcs",
     out_static_libs = ["libmp3lame.a"],
 )
@@ -53,9 +54,7 @@ configure_make(
     name = "libwebp",
     autogen = True,
     configure_in_place = True,
-    configure_options = [
-        "--disable-shared",
-    ],
+    configure_options = ["--disable-shared"],
     lib_source = "@libwebp_source//:all_srcs",
     out_static_libs = ["libwebp.a"],
 )
@@ -63,9 +62,6 @@ configure_make(
 configure_make(
     name = "ffmpeg",
     configure_options = [
-        "--target-os=none",
-        "--arch=x86_32",
-        "--enable-cross-compile",
         "--disable-debug",
         "--disable-x86asm",
         "--disable-inline-asm",
@@ -90,25 +86,33 @@ configure_make(
         "--enable-libopus",
         "--enable-libmp3lame",
         "--enable-libwebp",
-
-        "--extra-cflags='%s'" % COMMON_FLAGS,
-        "--extra-cxxflags='%s'" % COMMON_FLAGS,
-        "--extra-ldflags='%s'" % LDFLAGS_COMMON,
-
-        "--cc=$$EXT_BUILD_ROOT/$(CC)",
-        "--cxx=$$EXT_BUILD_ROOT/$(CC)",
-        "--ar=$$EXT_BUILD_ROOT/$(AR)",
-        "--nm=$$EXT_BUILD_ROOT/$(NM)",
-        "--ranlib=:",
-        "--as=$$EXT_BUILD_ROOT/$(CC)",
-        "--objcc=$$EXT_BUILD_ROOT/$(CC)",
-        "--dep-cc=$$EXT_BUILD_ROOT/$(CC)",
-    ],
-    env = {
-        "CFLAGS": COMMON_FLAGS,
-        "CXXFLAGS": COMMON_FLAGS,
-        "LDFLAGS": LDFLAGS_COMMON,
-    },
+    ] + select({
+        "@platforms//cpu:wasm32": [
+            "--target-os=none",
+            "--arch=x86_32",
+            "--enable-cross-compile",
+            "--extra-cflags='%s'" % COMMON_FLAGS,
+            "--extra-cxxflags='%s'" % COMMON_FLAGS,
+            "--extra-ldflags='%s'" % LDFLAGS_COMMON,
+            "--cc=$$EXT_BUILD_ROOT/$(CC)",
+            "--cxx=$$EXT_BUILD_ROOT/$(CC)",
+            "--ar=$$EXT_BUILD_ROOT/$(AR)",
+            "--nm=$$EXT_BUILD_ROOT/$(NM)",
+            "--ranlib=:",
+            "--as=$$EXT_BUILD_ROOT/$(CC)",
+            "--objcc=$$EXT_BUILD_ROOT/$(CC)",
+            "--dep-cc=$$EXT_BUILD_ROOT/$(CC)",
+        ],
+        "//conditions:default": [],
+    }),
+    env = select({
+        "@platforms//cpu:wasm32": {
+            "CFLAGS": COMMON_FLAGS,
+            "CXXFLAGS": COMMON_FLAGS,
+            "LDFLAGS": LDFLAGS_COMMON,
+        },
+        "//conditions:default": {},
+    }),
     lib_source = "@ffmpeg_source//:all_srcs",
     out_static_libs = [
         "libavcodec.a", "libavformat.a", "libavfilter.a", "libavdevice.a",
@@ -117,13 +121,23 @@ configure_make(
     deps = [":libvpx", ":libopus", ":lame", ":libwebp"],
 )
 
+cc_library(
+    name = "ikaria_lib",
+    srcs = ["src/dash.cpp"],
+    copts = select({
+        "@platforms//cpu:wasm32": [
+            "-s USE_PTHREADS=1",
+            "-O3",
+            "-fexceptions",
+        ],
+        "//conditions:default": ["-O3", "-pthread"],
+    }),
+    includes = ["src"],
+    deps = [":ffmpeg"],
+)
+
 cc_binary(
     name = "ikaria_wasm_raw",
-    srcs = ["src/dash.cpp"],
-    copts = [
-        COMMON_FLAGS,
-        "-fexceptions",
-    ],
     linkopts = [
         "-O3",
         "--bind",
@@ -136,15 +150,20 @@ cc_binary(
         "-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency",
         "-pthread",
     ],
-    data = [":node_modules"],
-    deps = [":ffmpeg"],
+    deps = [":ikaria_lib"],
 )
 
 wasm_cc_binary(
     name = "ikaria_wasm",
     cc_target = ":ikaria_wasm_raw",
-    outputs = [
-        "ikaria-wasm.js",
-        "ikaria-wasm.wasm",
+    outputs = ["ikaria-wasm.js", "ikaria-wasm.wasm"],
+)
+
+cc_test(
+    name = "dash_remuxer_test",
+    srcs = ["tests/dash_test.cpp"],
+    deps = [
+        ":ikaria_lib",
+        "@googletest//:gtest_main",
     ],
 )

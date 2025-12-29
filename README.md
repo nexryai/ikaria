@@ -1,38 +1,5 @@
 ## `ikaria (Ikaria.js)`
-WIP: ffmpegとffprobeを利用した、WASMで動作するGPL/特許フリーのメディア処理ライブラリ
-
-
-### Development
-
-
-#### .env ファイルを作成
-devcontainer使用時は自動的に設定されるため以下の操作は不要です。
-
-Docker in Dockerなど特殊な環境でない限りは、以下の環境変数を設定します。
-```
-DOCKER_COMPOSE_SRC_VOLUME_DIR=./
-```
-
-Docker in Docker環境で作業する場合などは、ホストから見たこのリポジトリのディレクトリを指定してください。
-```
-DOCKER_COMPOSE_SRC_VOLUME_DIR=/Users/myname/Developer/ikaria
-```
-
-#### ビルド
-```
-# 通常のビルド
-docker compose run ikaria task build
-
-# Dockerfile/依存ライブラリを含めて再コンパイル
-docker compose run --build ikaria task build
-```
-
-#### Debug UI にアクセス
-```
-cd demo
-pnpm install
-pnpm dev
-```
+WIP: ffmpegを利用した、WASMで動作するGPL/特許フリーのメディア処理ライブラリ
 
 ### Legal
 本ライブラリで使用しているffmpegは`--disable-gpl`フラグを使用してビルドしているため、このライブラリのリンクによってGPLの派生条項が適用されることはないと本ライブラリの開発者は認識しています。

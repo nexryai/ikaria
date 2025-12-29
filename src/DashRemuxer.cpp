@@ -9,7 +9,9 @@ extern "C" {
 #include <memory>
 #include <stdexcept>
 
+#ifdef __EMSCRIPTEN__
 #include <emscripten/wasmfs.h>
+#endif
 
 namespace fs = std::filesystem;
 
@@ -31,9 +33,11 @@ void DashRemuxer::ensure_directory(const std::string& filepath) {
 void DashRemuxer::init_opfs() {
     static bool initialized = false;
     if (!initialized) {
+        #ifdef __EMSCRIPTEN__
         backend_t opfs = wasmfs_create_opfs_backend();
         wasmfs_create_directory("/opfs", 0755, opfs);
         initialized = true;
+        #endif
     }
 }
 
@@ -47,17 +51,22 @@ void DashRemuxer::process(std::string inputPath, std::string outputPath, bool us
     ensure_directory(finalOutputPath);
 
     AVFormatContext* ifmt_raw = nullptr;
-    if (avformat_open_input(&ifmt_raw, inputPath.c_str(), nullptr, nullptr) < 0)
+    if (avformat_open_input(&ifmt_raw, inputPath.c_str(), nullptr, nullptr) < 0) {
         throw std::runtime_error("Could not open input");
-   
+    }
+
     FormatContextPtr ifmt_ctx(ifmt_raw);
 
-    if (avformat_find_stream_info(ifmt_ctx.get(), nullptr) < 0)
+    if (avformat_find_stream_info(ifmt_ctx.get(), nullptr) < 0) {
         throw std::runtime_error("Failed to retrieve stream info");
+    }
 
     AVFormatContext* ofmt_raw = nullptr;
     avformat_alloc_output_context2(&ofmt_raw, nullptr, "dash", finalOutputPath.c_str());
-    if (!ofmt_raw) throw std::runtime_error("Could not create output context");
+    if (!ofmt_raw) {
+        throw std::runtime_error("Could not create output context");
+    }
+
     FormatContextPtr ofmt_ctx(ofmt_raw);
 
     for (unsigned int i = 0; i < ifmt_ctx->nb_streams; i++) {
@@ -74,8 +83,9 @@ void DashRemuxer::process(std::string inputPath, std::string outputPath, bool us
     DictionaryPtr opts(opts_raw);
 
     if (!(ofmt_ctx->oformat->flags & AVFMT_NOFILE)) {
-        if (avio_open(&ofmt_ctx->pb, finalOutputPath.c_str(), AVIO_FLAG_WRITE) < 0)
+        if (avio_open(&ofmt_ctx->pb, finalOutputPath.c_str(), AVIO_FLAG_WRITE) < 0) {
             throw std::runtime_error("Could not open output file");
+        }
     }
 
     AVDictionary* tmp_opts = opts.release();
@@ -94,5 +104,7 @@ void DashRemuxer::process(std::string inputPath, std::string outputPath, bool us
     }
 
     av_write_trailer(ofmt_ctx.get());
-    if (!(ofmt_ctx->oformat->flags & AVFMT_NOFILE)) avio_closep(&ofmt_ctx->pb);
+    if (!(ofmt_ctx->oformat->flags & AVFMT_NOFILE)) {
+        avio_closep(&ofmt_ctx->pb);
+    }
 }

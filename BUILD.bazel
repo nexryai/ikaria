@@ -205,7 +205,7 @@ cc_test(
     data = [
         "tests/test_data/big-buck-bunny_trailer_h264.mov",
         "tests/test_data/big-buck-bunny_trailer_vp8.webm",
-        "tests/test_data/Tears of Steel - Blender VFX Open Movie [R6MlUcmOul8].webm",
+        "tests/test_data/Tears of Steel - Blender VFX Open Movie [R6MlUcmOul8].mp4",
         "tests/test_data/Tears of Steel in 4k - Official Blender Foundation release [OHOpb2fS-cM] (mp4a).mkv",
         "tests/test_data/Tears of Steel in 4k - Official Blender Foundation release [OHOpb2fS-cM] (opus).webm"
     ],

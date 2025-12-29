@@ -143,7 +143,7 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Values(
         DashTestParam{"big-buck-bunny_trailer_h264.mov", 5, 30},
         DashTestParam{"big-buck-bunny_trailer_vp8.webm", 0, 4},
-        DashTestParam{"Tears of Steel - Blender VFX Open Movie [R6MlUcmOul8].webm", 0, 4}
+        DashTestParam{"Tears of Steel - Blender VFX Open Movie [R6MlUcmOul8].mp4", 0, 4}
     ),
     [](const ::testing::TestParamInfo<DashRemuxerTest::ParamType>& info) {
         std::string name = info.param.filename;

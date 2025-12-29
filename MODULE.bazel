@@ -60,3 +60,17 @@ http_archive(
     strip_prefix = "ffmpeg-7.1.1",
     urls = ["https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.gz"],
 )
+
+http_archive(
+    name = "libxml2_source",
+    build_file_content = 'filegroup(name = "all_srcs", srcs = glob(["**"]), visibility = ["//visibility:public"])',
+    strip_prefix = "libxml2-2.15.1",
+    urls = ["https://download.gnome.org/sources/libxml2/2.15/libxml2-2.15.1.tar.xz"],
+)
+
+bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+git_override(
+    module_name = "hedron_compile_commands",
+    remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
+    commit = "abb61a688167623088f8768cc9264798df6a9d10",
+)

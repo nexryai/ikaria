@@ -9,7 +9,9 @@ A GPL/patent-free browser-side media processing library using ffmpeg that runs o
 ```bash
 bazel run @hedron_compile_commands//:refresh_all
 
-bazel test --config=native //:dash_remuxer_test --test_output=all
+bazel query "filter('test_', //...)" | xargs bazel test --test_output=all --cache_test_results=no --config=native
+# or
+bazel test --config=native //:test_dash_remuxer --test_output=all
 
 bazel build --config=wasm //:ikaria_wasm
 ```

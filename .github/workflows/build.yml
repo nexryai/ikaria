@@ -18,16 +18,15 @@ jobs:
 
       - name: Install packages
         run: |
-          ls tests/test_data
           sudo apt-get update
-          sudo apt-get install -y git curl wget autoconf automake libtool pkg-config gnupg
-          curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
-          sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
-          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+          sudo apt-get install -y git xz-utils curl autoconf automake libtool pkg-config
+          sudo curl -L https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 -o /usr/local/bin/bazel && sudo chmod +x /usr/local/bin/bazel
           sudo sh -c "echo 'deb http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main' >> /etc/apt/sources.list"
           sudo sh -c "echo 'deb-src http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main' >> /etc/apt/sources.list"
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo apt-get update && sudo apt-get install -y bazel clang-21
+          sudo apt-get update && sudo apt-get install -y clang-21
+          curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o ffmpeg-static.tar.xz
+          mkdir ffmpeg-static && tar -xf ffmpeg-static.tar.xz -C ffmpeg-static --strip-components=1 && rm ffmpeg-static.tar.xz && sudo mv ffmpeg-static/ffmpeg /usr/local/bin && rm -rf ffmpeg-static.tar.xz ffmpeg-static
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

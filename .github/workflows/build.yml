@@ -19,7 +19,7 @@ jobs:
       - name: Install packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y git xz-utils curl autoconf automake libtool pkg-config
+          sudo apt-get install -y git xz-utils curl wget autoconf automake libtool pkg-config
           sudo curl -L https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 -o /usr/local/bin/bazel && sudo chmod +x /usr/local/bin/bazel
           sudo sh -c "echo 'deb http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main' >> /etc/apt/sources.list"
           sudo sh -c "echo 'deb-src http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main' >> /etc/apt/sources.list"

@@ -11,7 +11,7 @@
     "workspaceFolder": "/workspace",
     "remoteUser": "ubuntu",
     "overrideCommand": true,
-    "postCreateCommand": "git config --global pull.rebase false",
+    "postCreateCommand": "git config --global pull.rebase false && bazel run @hedron_compile_commands//:refresh_all",
     "customizations": {
         "vscode": {
             "extensions": [

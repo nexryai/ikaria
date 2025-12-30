@@ -19,24 +19,14 @@ jobs:
       - name: Install packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y git curl wget autoconf automake libtool pkg-config gnupg
-          curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
-          sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
-          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+          sudo apt-get install -y git xz-utils curl wget autoconf automake libtool pkg-config
+          sudo curl -L https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 -o /usr/local/bin/bazel && sudo chmod +x /usr/local/bin/bazel
           sudo sh -c "echo 'deb https://apt.llvm.org/noble/ llvm-toolchain-noble-20 main' >> /etc/apt/sources.list"
           sudo sh -c "echo 'deb-src https://apt.llvm.org/noble/ llvm-toolchain-noble-20 main' >> /etc/apt/sources.list"
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo apt-get update && sudo apt-get install -y bazel clang-20 lld-20 llvm-20-linker-tools
-          lscpu
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Install pnpm
-        run: npm install -g pnpm
+          sudo apt-get update && sudo apt-get install -y clang-20 lld-20 llvm-20-linker-tools
+          curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o ffmpeg-static.tar.xz
+          mkdir ffmpeg-static && tar -xf ffmpeg-static.tar.xz -C ffmpeg-static --strip-components=1 && rm ffmpeg-static.tar.xz && sudo mv ffmpeg-static/ffmpeg /usr/local/bin && rm -rf ffmpeg-static.tar.xz ffmpeg-static
 
       - name: Execute bazel
-        run: bazel test --config=native //:dash_remuxer_test --test_output=all
+        run: bazel query "filter('test_', //...)" | xargs bazel test --test_output=all --cache_test_results=no --config=native

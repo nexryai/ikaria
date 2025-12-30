@@ -199,20 +199,36 @@ wasm_cc_binary(
     outputs = ["ikaria-wasm.js", "ikaria-wasm.wasm"],
 )
 
+cc_library(
+    name = "test_utils",
+    srcs = ["tests/utils.cpp"],
+    hdrs = ["tests/utils.hpp"],
+    deps = [
+        ":ikaria_lib",
+        "@googletest//:gtest",
+    ],
+)
+
 cc_test(
     name = "dash_remuxer_test",
     srcs = ["tests/dash_test.cpp"],
-    data = [
-        "tests/test_data/big-buck-bunny_trailer_h264.mov",
-        "tests/test_data/big-buck-bunny_trailer_vp8.webm",
-        "tests/test_data/Tears of Steel in 4k - Official Blender Foundation release [OHOpb2fS-cM] (mp4a).mkv",
-        "tests/test_data/Tears of Steel in 4k - Official Blender Foundation release [OHOpb2fS-cM] (opus).webm",
-        "tests/test_data/Tears of Steel in 4k - Official Blender Foundation release [OHOpb2fS-cM] (av1).webm",
-        "tests/test_data/No Copyright, Copyright Free Videos, sunset, beach, sea, waves [Eoo4HzILB-M].mp4"
-    ],
+    data = glob(["tests/test_data/*"]),
+    tags = ["exclusive"],
     deps = [
         ":ikaria_lib",
+        ":test_utils",
         "@googletest//:gtest_main",
-        "@bazel_tools//tools/cpp/runfiles",
+    ],
+)
+
+cc_test(
+    name = "dash_remuxer_test_ffmpeg",
+    srcs = ["tests/dash_test_ffmpeg.cpp"],
+    data = glob(["tests/test_data/*"]),
+    tags = ["exclusive"], # 他のテストと同時に実行されないようにする
+    deps = [
+        ":ikaria_lib",
+        ":test_utils",
+        "@googletest//:gtest_main",
     ],
 )

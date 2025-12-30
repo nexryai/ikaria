@@ -1,7 +1,7 @@
 FROM ubuntu:rolling
 
 RUN apt-get update && \
-    # DO NOT REMOVE wget - required by libopus ¯\_(ツ)_/¯
+    # DO NOT REMOVE wget - required to build libopus ¯\_(ツ)_/¯
     apt-get install -y git git-lfs xz-utils curl wget clang-21 clangd-21 autoconf automake libtool pkg-config && \
     curl -L https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 -o /usr/local/bin/bazel && chmod +x /usr/local/bin/bazel && \
     curl https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o ffmpeg-static.tar.xz && \

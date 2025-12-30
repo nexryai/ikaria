@@ -27,7 +27,7 @@
                 "editor.quickSuggestions": {
                     "strings": "on"
                 },
-                "clangd.path": "clangd-21"
+                "clangd.path": "clangd-20"
             }
         }
     }

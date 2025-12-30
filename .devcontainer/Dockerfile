@@ -1,10 +1,5 @@
-FROM emscripten/emsdk as emsdk
 FROM ubuntu:rolling
 
-# Copy include files from emsdk
-COPY --from=emsdk /emsdk/upstream/emscripten/system/include /emsdk/upstream/emscripten/system/include/
-
-# Install additional dependencies
 RUN apt-get update && \
     apt-get install -y git curl wget clang-21 clangd-21 autoconf automake libtool pkg-config gnupg && \
     curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg && \

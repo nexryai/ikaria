@@ -70,6 +70,13 @@ configure_make(
         "--without-zlib",
         "--without-lzma",
     ],
+    env = {
+        # libxml2 probably doesn't support CFI
+        # parserInternals.c:3059:31: runtime error: control flow integrity check for type 'void *(unsigned long)' failed during indirect function call
+        "CFLAGS": "-fno-sanitize=cfi",
+        "CXXFLAGS": "-fno-sanitize=cfi",
+        "LDFLAGS": "-fno-sanitize=cfi",
+    },
     lib_source = "@libxml2_source//:all_srcs",
     out_static_libs = ["libxml2.a"],
 )
@@ -99,7 +106,7 @@ configure_make(
         "--disable-gpl",
         "--enable-libvpx",
         "--enable-libopus",
-        "--enable-libmp3lame",
+        # "--enable-libmp3lame",
         "--enable-libwebp",
     ] + select({
         "@platforms//cpu:wasm32": [
@@ -123,8 +130,8 @@ configure_make(
             "--enable-libxml2",
             "--cc=$(CC)",
             "--cxx=$(CC)",
-            "--ar=$(AR)",
-            "--nm=$(NM)",
+            "--ar=llvm-ar-20",
+            "--nm=llvm-nm-20",
             "--ranlib=:",
             "--as=$(CC)",
             "--objcc=$(CC)",

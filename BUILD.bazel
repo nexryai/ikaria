@@ -210,7 +210,7 @@ cc_library(
 )
 
 cc_test(
-    name = "dash_remuxer_test",
+    name = "test_dash_remuxer",
     srcs = ["tests/dash_test.cpp"],
     data = glob(["tests/test_data/*"]),
     tags = ["exclusive"],
@@ -222,10 +222,20 @@ cc_test(
 )
 
 cc_test(
-    name = "dash_remuxer_test_ffmpeg",
+    name = "test_dash_remuxer_with_ffmpeg",
     srcs = ["tests/dash_test_ffmpeg.cpp"],
     data = glob(["tests/test_data/*"]),
     tags = ["exclusive"], # 他のテストと同時に実行されないようにする
+    deps = [
+        ":ikaria_lib",
+        ":test_utils",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "test_compiler_is_clang_not_gcc",
+    srcs = ["tests/check_compiler.cpp"],
     deps = [
         ":ikaria_lib",
         ":test_utils",

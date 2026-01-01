@@ -161,7 +161,7 @@ configure_make(
 
 cc_library(
     name = "ikaria_lib",
-    srcs = ["src/DashRemuxer.hpp", "src/DashRemuxer.cpp", "src/bindings.cpp"],
+    srcs = glob(["src/*"]),
     copts = select({
         "@platforms//cpu:wasm32": [
             "-s USE_PTHREADS=1",

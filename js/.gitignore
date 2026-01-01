@@ -3,8 +3,7 @@ node_modules
 
 /dist
 
-src/*-wasm.js
-src/*-wasm.wasm
-src/*-wasm.d.ts
+src/ikaria.js
+src/*.wasm
 
 tests/*.webm

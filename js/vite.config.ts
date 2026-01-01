@@ -14,6 +14,7 @@ export default defineConfig({
     rollupOptions: {
       external: [/^node:/],
     },
+    minify: 'terser'
   },
   worker: {
     format: 'es',
@@ -25,7 +26,7 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: 'src/ikaria-wasm.wasm',
+          src: 'src/ikaria.wasm',
           dest: '.'
         }
       ]

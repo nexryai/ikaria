@@ -12,10 +12,11 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "cp ../bazel-bin/* ./src && rm -rf dist && vite build"
+    "build": "cp -f ../bazel-bin/*.wasm ./src && cp -f ../bazel-bin/*.js ./src && rm -rf dist && vite build"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
+    "terser": "^5.44.1",
     "typescript": "^5.8.3",
     "vite": "^7.2.6",
     "vite-plugin-dts": "^4.5.4",

@@ -1,4 +1,4 @@
-import Ikaria from './ikaria-wasm.js';
+import Ikaria from './ikaria.js';
 
 console.log('Worker: Starting worker');
 

@@ -1,4 +1,4 @@
-import wasmWorker from "./worker-browser?worker"
+import wasmWorker from "./worker-browser?worker&inline"
 
 // const browserWorker = new window.Worker(new URL("./worker-browser", import.meta.url), { type: 'module' });
 const browserWorker = new wasmWorker();

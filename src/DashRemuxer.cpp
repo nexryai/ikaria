@@ -1,4 +1,4 @@
-#include "runtime.cpp"
+#include "runtime.hpp"
 #include "DashRemuxer.hpp"
 extern "C" {
 #include <libavformat/avformat.h>

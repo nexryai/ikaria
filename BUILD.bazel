@@ -185,26 +185,26 @@ cc_library(
 )
 
 cc_binary(
-    name = "ikaria_wasm_raw",
+    name = "ikaria",
     linkopts = [
         "-O3",
         "--bind",
-        "-sEXPORTED_RUNTIME_METHODS=['FS','cwrap','ccall','getValue','setValue','writeAsciiToMemory']",
+        # "-sEXPORTED_RUNTIME_METHODS=['FS','cwrap','ccall','getValue','setValue','writeAsciiToMemory']",
         "-sINITIAL_MEMORY=268435456",
         "-sEXPORT_ES6=1",
         "-sWASMFS",
-        "-sFORCE_FILESYSTEM",
         "-sASSERTIONS",
         "-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency",
         "-pthread",
+        "-o ikaria.js",
     ],
     deps = [":ikaria_lib"],
 )
 
 wasm_cc_binary(
-    name = "ikaria_wasm",
-    cc_target = ":ikaria_wasm_raw",
-    outputs = ["ikaria-wasm.js", "ikaria-wasm.wasm"],
+    name = "ikaria_js",
+    cc_target = ":ikaria",
+    outputs = ["ikaria.js", "ikaria.wasm"],
 )
 
 cc_library(

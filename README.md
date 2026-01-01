@@ -13,7 +13,7 @@ bazel query "filter('test_', //...)" | xargs bazel test --test_output=all --cach
 # or
 bazel test --config=native //:test_dash_remuxer --test_output=all
 
-bazel build --config=wasm //:ikaria_wasm
+bazel build --config=wasm //:ikaria_js
 ```
 
 ## Legal

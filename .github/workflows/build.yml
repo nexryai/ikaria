@@ -38,4 +38,4 @@ jobs:
         run: npm install -g pnpm
 
       - name: Build with bazel
-        run: bazel build --config=wasm //:ikaria_wasm
+        run: bazel build --config=wasm //:ikaria_js

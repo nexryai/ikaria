@@ -161,7 +161,11 @@ configure_make(
 
 cc_library(
     name = "ikaria_lib",
-    srcs = glob(["src/*"]),
+    srcs = glob(
+        ["src/*.cpp"],
+        exclude = ["src/runtime.cpp"],
+    ),
+    hdrs = glob(["src/*.hpp"]) + ["src/runtime.cpp"],
     copts = select({
         "@platforms//cpu:wasm32": [
             "-s USE_PTHREADS=1",

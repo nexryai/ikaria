@@ -167,6 +167,9 @@ cc_library(
     copts = select({
         "@platforms//cpu:wasm32": [
             "-s USE_PTHREADS=1",
+            # Nested Workerにするとバンドラーが正しくバンドルできないのでJSPIを使いたい
+            # ただChromeだとレンダリングプロセスがSIGILLでクラッシュする上に、Firefoxが対応していないので見送り
+            # "-sJSPI",
             "-O3",
             "-fexceptions",
         ],

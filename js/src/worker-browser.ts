@@ -18,7 +18,9 @@ self.onmessage = async (e: MessageEvent) => {
             case 'remux_to_dash':
                 console.log("Starting....")
                 // @ts-ignore
-                ikaria.remuxToDash(file, `/out/manifest.mpd`)
+                const remuxer = new ikaria.DashRemuxer();
+                // @ts-ignore
+                remuxer.process(file, `/out/manifest.mpd`, true)
                 console.log("Done!");
                 postMessage({ result: "ok" });
 

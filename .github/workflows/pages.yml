@@ -1,0 +1,82 @@
+name: Demo pages deploy CI
+on:
+  push:
+    branches: ["nightly"]
+
+permissions: {}
+
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          lfs: true
+
+      - name: Install packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git xz-utils curl wget autoconf automake libtool pkg-config
+          sudo curl -L https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 -o /usr/local/bin/bazel && sudo chmod +x /usr/local/bin/bazel
+          sudo sh -c "echo 'deb https://apt.llvm.org/noble/ llvm-toolchain-noble-20 main' >> /etc/apt/sources.list"
+          sudo sh -c "echo 'deb-src https://apt.llvm.org/noble/ llvm-toolchain-noble-20 main' >> /etc/apt/sources.list"
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo apt-get update && sudo apt-get install -y clang-20 lld-20 llvm-20-linker-tools
+          curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o ffmpeg-static.tar.xz
+          mkdir ffmpeg-static && tar -xf ffmpeg-static.tar.xz -C ffmpeg-static --strip-components=1 && rm ffmpeg-static.tar.xz && sudo mv ffmpeg-static/ffmpeg /usr/local/bin && rm -rf ffmpeg-static.tar.xz ffmpeg-static
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Build with bazel
+        run: bazel build --config=wasm //:ikaria_js
+
+      - name: Install dependencies (js)
+        working-directory: js
+        run: pnpm install
+
+      - name: Install dependencies (demo)
+        working-directory: demo
+        run: pnpm install
+
+      - name: Bundle with Vite
+        working-directory: js
+        run: pnpm build
+
+      - name: Build demo pages with Vite
+        working-directory: demo
+        run: pnpm build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: demo/dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

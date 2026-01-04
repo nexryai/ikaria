@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && cp -f ../js/dist/assets/ikaria-*.js dist/assets",
+    "build": "tsc -b && vite build && cp -f ../js/dist/assets/ikaria-*.js dist/assets && cp -f node_modules/coi-serviceworker/coi-serviceworker.min.js dist/assets/",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -19,6 +19,7 @@
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
+    "coi-serviceworker": "^0.1.7",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4"

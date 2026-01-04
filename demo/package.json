@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && cp -f ../js/dist/assets/ikaria-*.js dist/assets",
+    "build": "tsc -b && vite build && cp -f ../js/dist/*.wasm dist/assets",
     "deploy": "wrangler deploy",
     "lint": "eslint .",
     "preview": "vite preview"

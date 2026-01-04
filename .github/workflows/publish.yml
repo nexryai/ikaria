@@ -16,31 +16,41 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
-      - name: Build
+      - name: Install packages
         run: |
-          echo "DOCKER_COMPOSE_SRC_VOLUME_DIR=./" > .env
-          docker compose run ikaria task build
+          sudo apt-get update
+          sudo apt-get install -y git xz-utils curl wget autoconf automake libtool pkg-config
+          sudo curl -L https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 -o /usr/local/bin/bazel && sudo chmod +x /usr/local/bin/bazel
+          sudo sh -c "echo 'deb https://apt.llvm.org/noble/ llvm-toolchain-noble-20 main' >> /etc/apt/sources.list"
+          sudo sh -c "echo 'deb-src https://apt.llvm.org/noble/ llvm-toolchain-noble-20 main' >> /etc/apt/sources.list"
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo apt-get update && sudo apt-get install -y clang-20 lld-20 llvm-20-linker-tools
+          curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o ffmpeg-static.tar.xz
+          mkdir ffmpeg-static && tar -xf ffmpeg-static.tar.xz -C ffmpeg-static --strip-components=1 && rm ffmpeg-static.tar.xz && sudo mv ffmpeg-static/ffmpeg /usr/local/bin && rm -rf ffmpeg-static.tar.xz ffmpeg-static
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Update npm to latest version
         run: npm install -g npm@latest
 
       - name: Install pnpm
-        working-directory: js
         run: npm install -g pnpm
+
+      - name: Build with bazel
+        run: bazel build --config=wasm //:ikaria_js
 
       - name: Install dependencies
         working-directory: js
         run: pnpm install
 
-
-      - name: Build package
+      - name: Bundle with Vite
         working-directory: js
         run: pnpm build
 

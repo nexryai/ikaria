@@ -27,34 +27,6 @@ register_toolchains("@rules_foreign_cc//toolchains:all")
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
-    name = "libvpx_source",
-    build_file_content = 'filegroup(name = "all_srcs", srcs = glob(["**"]), visibility = ["//visibility:public"])',
-    strip_prefix = "libvpx-1.15.1",
-    urls = ["https://github.com/webmproject/libvpx/archive/refs/tags/v1.15.1.tar.gz"],
-)
-
-http_archive(
-    name = "libopus_source",
-    build_file_content = 'filegroup(name = "all_srcs", srcs = glob(["**"]), visibility = ["//visibility:public"])',
-    strip_prefix = "opus-1.5.2",
-    urls = ["https://github.com/xiph/opus/archive/refs/tags/v1.5.2.tar.gz"],
-)
-
-http_archive(
-    name = "lame_source",
-    build_file_content = 'filegroup(name = "all_srcs", srcs = glob(["**"]), visibility = ["//visibility:public"])',
-    strip_prefix = "lame-3.100",
-    urls = ["https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"],
-)
-
-http_archive(
-    name = "libwebp_source",
-    build_file_content = 'filegroup(name = "all_srcs", srcs = glob(["**"]), visibility = ["//visibility:public"])',
-    strip_prefix = "libwebp-1.6.0",
-    urls = ["https://github.com/webmproject/libwebp/archive/refs/tags/v1.6.0.tar.gz"],
-)
-
-http_archive(
     name = "ffmpeg_source",
     build_file_content = 'filegroup(name = "all_srcs", srcs = glob(["**"]), visibility = ["//visibility:public"])',
     strip_prefix = "ffmpeg-7.1.1",

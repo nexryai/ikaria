@@ -3,7 +3,7 @@ load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 load("@emsdk//emscripten_toolchain:wasm_rules.bzl", "wasm_cc_binary")
 
 COMMON_FLAGS = "-s USE_PTHREADS=1 -O3"
-LDFLAGS_COMMON = "-s USE_PTHREADS=1 -O3 -s INITIAL_MEMORY=33554432"
+LDFLAGS_COMMON = "-s USE_PTHREADS=1 -O3"
 
 platform(
     name = "wasm_platform",
@@ -170,6 +170,7 @@ cc_library(
             # Nested Workerにするとバンドラーが正しくバンドルできないのでJSPIを使いたい
             # ただChromeだとレンダリングプロセスがSIGILLでクラッシュする上に、Firefoxが対応していないので見送り
             # "-sJSPI",
+            "-sNO_DISABLE_EXCEPTION_CATCHING",
             "-O3",
             "-fexceptions",
         ],
@@ -193,8 +194,10 @@ cc_binary(
     linkopts = [
         "-O3",
         "--bind",
+        "-sNO_DISABLE_EXCEPTION_CATCHING",
         # "-sEXPORTED_RUNTIME_METHODS=['FS','cwrap','ccall','getValue','setValue','writeAsciiToMemory']",
-        "-sINITIAL_MEMORY=268435456",
+        "-sINITIAL_MEMORY=399966208",
+        "-sALLOW_MEMORY_GROWTH=1",
         "-sEXPORT_ES6=1",
         "-sWASMFS",
         "-sASSERTIONS",

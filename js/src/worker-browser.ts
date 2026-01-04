@@ -19,10 +19,15 @@ self.onmessage = async (e: MessageEvent) => {
                 console.log("Starting....")
                 // @ts-ignore
                 const remuxer = new ikaria.DashRemuxer();
-                // @ts-ignore
-                remuxer.process(file, `/out/manifest.mpd`, true)
-                console.log("Done!");
-                postMessage({ result: "ok" });
+
+                try {
+                    // @ts-ignore
+                    remuxer.process(file, `/out/manifest.mpd`, true)
+                    console.log("Done!");
+                    postMessage({ result: "ok" });
+                } finally {
+                    remuxer.delete();
+                }
 
             default:
                 break;

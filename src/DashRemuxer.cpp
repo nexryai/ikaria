@@ -1,4 +1,5 @@
 #include "runtime.hpp"
+#include <iostream>
 #include "DashRemuxer.hpp"
 extern "C" {
 #include <libavformat/avformat.h>
@@ -32,6 +33,8 @@ void DashRemuxer::init_opfs() {
 }
 
 void DashRemuxer::process(std::string inputPath, std::string outputPath, bool use_opfs) {
+    std::cout << "[ikaria] called process" << std::endl;
+
     const std::string format = inputPath.substr(inputPath.find_last_of('.') + 1);
     const std::string targetFormat = format == "mov" || format == "mkv" ? "mp4" : format;
 
@@ -42,6 +45,7 @@ void DashRemuxer::process(std::string inputPath, std::string outputPath, bool us
     }
 
     ensure_directory(finalOutputPath);
+    std::cout << "[ikaria] ensure_directory() --> OK" << std::endl;
 
     AVFormatContext* ifmt_raw = nullptr;
     int ret = avformat_open_input(&ifmt_raw, inputPath.c_str(), nullptr, nullptr);
@@ -92,13 +96,29 @@ void DashRemuxer::process(std::string inputPath, std::string outputPath, bool us
         throw std::runtime_error("Error writing header");
     }
 
-    PacketPtr pkt(av_packet_alloc());
-    while (av_read_frame(ifmt_ctx.get(), pkt.get()) >= 0) {
-        AVStream *in_s = ifmt_ctx->streams[pkt->stream_index], *out_s = ofmt_ctx->streams[pkt->stream_index];
+    std::cout << "[ikaria] avformat_write_header() --> OK" << std::endl;
+
+    while (true) {
+        PacketPtr pkt(av_packet_alloc());
+        if (!pkt) {
+            throw std::runtime_error("Could not allocate packet");
+        }
+
+        if (av_read_frame(ifmt_ctx.get(), pkt.get()) < 0) {
+            break; // ファイル末尾、またはエラー
+        }
+
+        AVStream *in_s = ifmt_ctx->streams[pkt->stream_index];
+        AVStream *out_s = ofmt_ctx->streams[pkt->stream_index];
+
         av_packet_rescale_ts(pkt.get(), in_s->time_base, out_s->time_base);
         pkt->pos = -1;
-        av_interleaved_write_frame(ofmt_ctx.get(), pkt.get());
-        av_packet_unref(pkt.get());
+
+        if (av_interleaved_write_frame(ofmt_ctx.get(), pkt.get()) < 0) {
+            break;
+        }
+
+        pkt.reset();
     }
 
     av_write_trailer(ofmt_ctx.get());

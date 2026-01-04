@@ -11,6 +11,9 @@ void AVDeleter::operator()(AVFormatContext* p) const {
         if (p->iformat) {
             avformat_close_input(&p);
         } else {
+            if (p->pb && !(p->oformat->flags & AVFMT_NOFILE)) {
+                avio_closep(&p->pb);
+            }
             avformat_free_context(p);
         }
     }

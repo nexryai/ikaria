@@ -1,10 +1,16 @@
 #include "utils.hpp"
 #include <cmath>
 #include <iostream>
+#include <fstream>
 #include <algorithm>
+#include <cstdio>
+#include <ostream>
+#include <stdexcept>
 #include <filesystem>
 #include <set>
 #include "gtest/gtest.h"
+#include <curl/curl.h>
+
 extern "C" {
 #include <libavutil/crc.h>
 #include <libavutil/avutil.h>
@@ -74,4 +80,49 @@ void cleanup_test_files() {
             }
         }
     } catch (...) {}
+}
+
+std::string download_test_data(const std::string& url) {
+    static bool curl_initialized = false;
+    if (!curl_initialized) {
+        curl_global_init(CURL_GLOBAL_ALL);
+        curl_initialized = true;
+    }
+
+    CURL* curl = curl_easy_init();
+    if (!curl) throw std::runtime_error("Failed to initialize CURL");
+
+    size_t last_slash_idx = url.find_last_of('/');
+    std::string base_url = url.substr(0, last_slash_idx + 1);
+    std::string raw_filename = url.substr(last_slash_idx + 1);
+
+    char* encoded_filename_ptr = curl_easy_escape(curl, raw_filename.c_str(), static_cast<int>(raw_filename.length()));
+    const std::string encoded_filename = encoded_filename_ptr;
+    curl_free(encoded_filename_ptr);
+
+    std::string final_url = base_url + encoded_filename;
+
+    const std::string local_filename = "tmp_" + raw_filename;
+    std::ofstream ofs(local_filename, std::ios::binary);
+
+    curl_easy_setopt(curl, CURLOPT_URL, final_url.c_str());
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, +[](void* ptr, size_t size, size_t nmemb, void* stream) -> size_t {
+        static_cast<std::ostream*>(stream)->write(static_cast<char*>(ptr), size * nmemb);
+        return size * nmemb;
+    });
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ofs);
+
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+
+    if (res != CURLE_OK) {
+        ofs.close();
+        std::filesystem::remove(local_filename);
+        throw std::runtime_error("Download failed for URL: " + final_url + " | Error: " + curl_easy_strerror(res));
+    } else {
+        std::cout << "File downloaded! : " << local_filename << std::endl;
+    }
+
+    return local_filename;
 }

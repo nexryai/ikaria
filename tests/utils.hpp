@@ -28,3 +28,5 @@ using PacketPtr = std::unique_ptr<AVPacket, AVDeleter>;
 StreamData get_stream_data(const std::string& path);
 void verify_stream(const std::vector<PacketInfo>& orig, const std::vector<PacketInfo>& remux, const std::string& label, int tolerance, const double allowed_pts_diff, const std::string& format = "");
 void cleanup_test_files();
+
+std::string download_test_data(const std::string& url);

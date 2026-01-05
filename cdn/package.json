@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "type": "module",
   "scripts": {
-    "build": "cp -f ../bazel-bin/*.wasm ./src && cp -f ../bazel-bin/*.js ./src && rm -rf dist && tsc && cp src/ikaria.wasm dist/ && pnpm minify && cp src/_headers dist/",
+    "build": "cp -f ../bazel-bin/*.wasm ./src && cp -f ../bazel-bin/*.js ./src && sed -i 's/new URL(\"ikaria\",import.meta.url)/new URL(\"ikaria.js\",import.meta.url)/g' src/ikaria.js && rm -rf dist && tsc && cp src/ikaria.wasm dist/ && pnpm minify && cp src/_headers dist/",
     "minify": "for f in dist/*.js; do terser \"$f\" -o \"$f\" --compress --mangle --module; done",
     "deploy": "wrangler deploy"
   },

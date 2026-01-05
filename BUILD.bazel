@@ -31,6 +31,7 @@ configure_make(
         "--without-python",
         "--without-zlib",
         "--without-lzma",
+        "--without-zstd",
     ],
     env = {
         "AR": "llvm-ar-20",
@@ -231,6 +232,7 @@ configure_make(
         "--with-openssl",
         "--with-pic",
         "--without-libpsl",
+        "--without-zstd",
         "--disable-ldap",
         "--disable-rtsp",
         "--disable-proxy",

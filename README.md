@@ -5,6 +5,11 @@ A GPL/patent-free browser-side media processing library using ffmpeg that runs o
 - Unlike ffmpeg.wasm, this library uses OPFS for all operations. It can remux even large files that exceed memory size.
 - Currently, it only supports converting video files to DASH, but plans to support more operations in the future.
 
+## Design Philosophy
+- This library is not intended as a replacement for ffmpeg.wasm. It does not support patented codecs such as H.264 or features that require GPL-licensed libraries.
+- ikaria is designed for browser-side remuxing and "lossless cutting" of large files (which is less expensive than encoding). Unlike ffmpeg.wasm, ikaria relies almost exclusively on external libraries and intentionally does not support codecs that require them. ikaria uses only ffmpeg's native muxer and decoder.
+- While the WASM runtime environment has strong memory protection features, ikaria uses clang's sanitizer as an additional protection. This is to prevent arbitrary code execution when a user processes a maliciously crafted file.
+
 ## Develop
 ```bash
 bazel run @hedron_compile_commands//:refresh_all

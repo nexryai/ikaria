@@ -7,7 +7,7 @@ build --platforms=//:host_platform
 # /usr/bin/ld: /usr/lib/llvm-21/bin/../lib/LLVMgold.so: error loading plugin: /usr/lib/llvm-21/bin/../lib/LLVMgold.so: cannot open shared object file: No such file or directory
 build --repo_env=CC=clang-20
 build --repo_env=CXX=clang++-20
-build --repo_env=BAZEL_CONLYOPTS="-std=gnu17"
+# build --repo_env=BAZEL_CONLYOPTS="-std=gnu17"
 build:native --linkopt=-fuse-ld=lld-20
 # build:native --host_linkopt=-fuse-ld=lld-20
 build:native --dynamic_mode=off
@@ -16,8 +16,12 @@ build:native --dynamic_mode=off
 build --copt=-fstack-protector-strong
 build --host_copt=-fstack-clash-protection
 build --host_copt=-D_FORTIFY_SOURCE=3
-build --host_copt=-fsanitize=bounds,undefined
-build --host_linkopt=-fsanitize=bounds,undefined
+build --host_copt=-fsanitize=bounds
+build --host_linkopt=-fsanitize=bounds
+
+# https://github.com/bazelbuild/bazel/issues/11122
+# build --host_copt=-fno-sanitize=vptr
+# build --host_linkopt=-fno-sanitize=vptr
 
 build:native --copt=-fstack-clash-protection
 build:native --copt=-D_FORTIFY_SOURCE=3
@@ -33,8 +37,6 @@ build:native --linkopt=-fsanitize=address,undefined
 # build --host_copt=-fno-sanitize-trap=cfi
 # build --host_copt=-fvisibility=hidden
 
-# build --host_copt=-fno-sanitize=vptr
-# build --host_linkopt=-fno-sanitize=vptr
 # build --host_copt=-frtti
 
 build:native --copt=-flto

@@ -1,5 +1,6 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
-load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make", "cmake")
+# load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 load("@emsdk//emscripten_toolchain:wasm_rules.bzl", "wasm_cc_binary")
 
 COMMON_FLAGS = "-s USE_PTHREADS=1 -O3"
@@ -43,6 +44,19 @@ configure_make(
     out_static_libs = ["libxml2.a"],
 )
 
+cmake(
+    name = "boringssl",
+    cache_entries = {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_SHARED_LIBS": "OFF",
+    },
+    lib_source = "@boringssl_source//:all_srcs",
+    out_static_libs = [
+        "libssl.a",
+        "libcrypto.a",
+    ],
+)
+
 configure_make(
     name = "ffmpeg",
     configure_options = [
@@ -50,7 +64,6 @@ configure_make(
         "--disable-x86asm",
         "--disable-inline-asm",
         "--disable-stripping",
-        "--disable-programs",
         "--disable-doc",
         "--disable-all",
         "--enable-avcodec",
@@ -61,13 +74,14 @@ configure_make(
         "--enable-swresample",
         "--enable-postproc",
         "--enable-swscale",
-        "--enable-protocol=file",
         "--enable-decoder=aac,pcm_s16le,mp3",
         "--enable-demuxer=dash,mov,matroska,mp3,webm",
         "--enable-muxer=dash,mp4,webm",
         "--disable-gpl",
     ] + select({
         "@platforms//cpu:wasm32": [
+            "--disable-programs",
+            "--enable-protocol=file",
             "--target-os=none",
             "--arch=x86_32",
             "--enable-cross-compile",
@@ -84,6 +98,10 @@ configure_make(
             "--dep-cc=$$EXT_BUILD_ROOT/$(CC)",
         ],
         "//conditions:default": [
+            "--enable-ffmpeg",
+            "--enable-network",
+            "--enable-openssl",
+            "--enable-protocol=file,https,tls,tcp,udp",
             "--enable-zlib",
             "--enable-libxml2",
             "--cc=$(CC)",
@@ -94,6 +112,8 @@ configure_make(
             "--as=$(CC)",
             "--objcc=$(CC)",
             "--dep-cc=$(CC)",
+            "--extra-cflags=-I$$EXT_BUILD_DEPS/boringssl/include",
+            "--extra-ldflags=-L$$EXT_BUILD_DEPS/boringssl/lib",
         ],
     }),
     env = select({
@@ -105,6 +125,10 @@ configure_make(
         "//conditions:default": {},
     }),
     lib_source = "@ffmpeg_source//:all_srcs",
+    out_binaries = select({
+        "@platforms//cpu:wasm32": [],
+        "//conditions:default": ["ffmpeg"],
+    }),
     out_static_libs = [
         "libavdevice.a",
         "libavfilter.a",
@@ -114,7 +138,7 @@ configure_make(
         "libswresample.a",
         "libavutil.a",
     ],
-    deps = [":libxml2"],
+    deps = [":libxml2", ":boringssl"],
 )
 
 cc_library(
@@ -171,12 +195,32 @@ wasm_cc_binary(
     outputs = ["ikaria.js", "ikaria.wasm"],
 )
 
+configure_make(
+    name = "curl",
+    configure_options = [
+        "--disable-shared",
+        "--enable-static",
+        "--with-openssl",
+        "--without-libpsl",
+        "--disable-ldap",
+        "--disable-rtsp",
+        "--disable-proxy",
+    ],
+    lib_source = "@curl_source//:all_srcs",
+    env = {
+        "OPENSSL_LIBS": "-lssl -lcrypto -lpthread",
+    },
+    out_static_libs = ["libcurl.a"],
+    deps = [":boringssl"],
+)
+
 cc_library(
     name = "test_utils",
     srcs = ["tests/utils.cpp"],
     hdrs = ["tests/utils.hpp"],
     deps = [
         ":ikaria_lib",
+        ":curl",
         "@googletest//:gtest",
     ],
 )

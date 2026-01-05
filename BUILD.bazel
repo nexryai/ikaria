@@ -1,6 +1,5 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
-# load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 load("@emsdk//emscripten_toolchain:wasm_rules.bzl", "wasm_cc_binary")
 
 COMMON_FLAGS = "-s USE_PTHREADS=1 -O3"
@@ -34,6 +33,9 @@ configure_make(
         "--without-lzma",
     ],
     env = {
+        "AR": "llvm-ar-20",
+        "NM": "llvm-nm-20",
+        "RANLIB": "llvm-ranlib-20",
         # libxml2 probably doesn't support CFI
         # parserInternals.c:3059:31: runtime error: control flow integrity check for type 'void *(unsigned long)' failed during indirect function call
         "CFLAGS": "-fno-sanitize=cfi",
@@ -54,7 +56,14 @@ cc_library(
 )
 
 configure_make(
-    name = "ffmpeg",
+    name = "ffmpeg_core",
+    configure_prefix = select({
+        "@platforms//cpu:wasm32": None,
+        "//conditions:default": " ".join([
+            "ln -sf $$EXT_BUILD_DEPS/lib/libcrypto_internal.a $$EXT_BUILD_DEPS/lib/libcrypto.a &&",
+            "ln -sf $$EXT_BUILD_DEPS/lib/libssl_internal.a $$EXT_BUILD_DEPS/lib/libssl.a &&",
+        ]),
+    }),
     configure_options = [
         "--disable-debug",
         "--disable-x86asm",
@@ -88,7 +97,7 @@ configure_make(
             "--cxx=$$EXT_BUILD_ROOT/$(CC)",
             "--ar=$$EXT_BUILD_ROOT/$(AR)",
             "--nm=$$EXT_BUILD_ROOT/$(NM)",
-            "--ranlib=:",
+            "--ranlib=llvm-ranlib-20",
             "--as=$$EXT_BUILD_ROOT/$(CC)",
             "--objcc=$$EXT_BUILD_ROOT/$(CC)",
             "--dep-cc=$$EXT_BUILD_ROOT/$(CC)",
@@ -104,12 +113,15 @@ configure_make(
             "--cxx=$(CC)",
             "--ar=llvm-ar-20",
             "--nm=llvm-nm-20",
-            "--ranlib=:",
+            "--ranlib=llvm-ranlib-20",
+            "--ld=$(CC)",
             "--as=$(CC)",
             "--objcc=$(CC)",
             "--dep-cc=$(CC)",
-            "--extra-cflags=-I$$EXT_BUILD_DEPS/boringssl/include",
-            "--extra-ldflags=-L$$EXT_BUILD_DEPS/boringssl/lib",
+            "--extra-cflags='-fsanitize=address,undefined -fno-sanitize-trap=all'",
+            "--extra-ldflags='-fsanitize=address,undefined'",
+            "--extra-cflags='-I$$EXT_BUILD_DEPS/include -I$$EXT_BUILD_DEPS/libxml2/include/libxml2 -fuse-ld=lld-20'",
+            "--extra-ldflags='-L$$EXT_BUILD_DEPS/lib -L$$EXT_BUILD_DEPS/libxml2/lib -fuse-ld=lld-20 -lstdc++'",
         ],
     }),
     env = select({
@@ -118,7 +130,12 @@ configure_make(
             "CXXFLAGS": COMMON_FLAGS,
             "LDFLAGS": LDFLAGS_COMMON,
         },
-        "//conditions:default": {},
+        "//conditions:default": {
+            "LD": "$(CC)",
+            "RANLIB": "llvm-ranlib-20",
+            "AR": "llvm-ar-20",
+            "NM": "llvm-nm-20",
+        },
     }),
     lib_source = "@ffmpeg_source//:all_srcs",
     out_binaries = select({
@@ -155,7 +172,7 @@ cc_library(
         "//conditions:default": ["-O3", "-pthread"],
     }),
     includes = ["src"],
-    deps = [":ffmpeg"],
+    deps = [":ffmpeg_core"],
     linkopts = select({
         "@platforms//cpu:wasm32": [],
         "//conditions:default": [
@@ -199,7 +216,6 @@ configure_make(
     configure_prefix = " ".join([
         "ln -sf $$EXT_BUILD_DEPS/lib/libcrypto_internal.a $$EXT_BUILD_DEPS/lib/libcrypto.a &&",
         "ln -sf $$EXT_BUILD_DEPS/lib/libssl_internal.a $$EXT_BUILD_DEPS/lib/libssl.a &&",
-        " &&",
     ]),
     configure_options = [
         "--disable-shared",
@@ -214,9 +230,15 @@ configure_make(
     lib_source = "@curl_source//:all_srcs",
     env = {
         "CPPFLAGS": "-I$$EXT_BUILD_DEPS/include",
-        "LDFLAGS": "-L$$EXT_BUILD_DEPS/lib",
-        "OPENSSL_LIBS": "-L$$EXT_BUILD_DEPS/lib -lssl_internal -lcrypto_internal -ldl -lpthread",
-        "LIBS": "-ldl -lpthread",
+        "LIBS": "-lstdc++ -ldl -lpthread",
+        "CC": "$(CC)",
+        "CXX": "$(CC)",
+        "AR": "$(AR)",
+        "NM": "$(NM)",
+        "RANLIB": ":",
+        # Sanitizer フラグを明示的に追加して configure のテストを通す
+        "CFLAGS": "-fsanitize=address,undefined -fno-sanitize-trap=all -flto -fPIC",
+        "LDFLAGS": "-L$$EXT_BUILD_DEPS/lib -fsanitize=address,undefined -flto -fuse-ld=lld",
     },
     out_static_libs = ["libcurl.a"],
     deps = [":boringssl"],

@@ -15,8 +15,9 @@ build:native --dynamic_mode=off
 build --copt=-fstack-protector-strong
 build --host_copt=-fstack-clash-protection
 build --host_copt=-D_FORTIFY_SOURCE=3
-build --host_copt=-fsanitize=bounds,undefined
-build --host_linkopt=-fsanitize=bounds,undefined
+# gslist.c:896:7: runtime error: call to function g_free through pointer to incorrect function type 'void (*)(void *, void *)'
+build --host_copt=-fsanitize=bounds
+build --host_linkopt=-fsanitize=bounds
 
 # https://github.com/bazelbuild/bazel/issues/11122
 # build --host_copt=-fno-sanitize=vptr

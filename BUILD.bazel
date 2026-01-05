@@ -2,8 +2,8 @@ load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 load("@emsdk//emscripten_toolchain:wasm_rules.bzl", "wasm_cc_binary")
 
-COMMON_FLAGS = "-s USE_PTHREADS=1 -O3"
-LDFLAGS_COMMON = "-s USE_PTHREADS=1 -O3"
+COMMON_FLAGS = "-O3"
+LDFLAGS_COMMON = "-O3"
 
 platform(
     name = "wasm_platform",
@@ -170,15 +170,12 @@ cc_library(
     alwayslink = 1,
     copts = select({
         "@platforms//cpu:wasm32": [
-            "-s USE_PTHREADS=1",
-            # Nested Workerにするとバンドラーが正しくバンドルできないのでJSPIを使いたい
-            # Firefoxが対応していないので見送り
-            # "-sJSPI",
+            "-sJSPI",
             "-sNO_DISABLE_EXCEPTION_CATCHING",
             "-O3",
             "-fexceptions",
         ],
-        "//conditions:default": ["-O3", "-pthread"],
+        "//conditions:default": ["-O3"],
     }),
     includes = ["src"],
     deps = [":ffmpeg_core"],
@@ -187,7 +184,6 @@ cc_library(
         "//conditions:default": [
             "-lz",
             "-lm",
-            "-lpthread",
             "-ldl",
         ],
     }),
@@ -204,8 +200,8 @@ cc_binary(
         "-sEXPORT_ES6=1",
         "-sWASMFS",
         "-sASSERTIONS",
-        "-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency",
-        "-pthread",
+        "-sJSPI",
+        # "-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency",
         "-o ikaria.js",
     ],
     deps = [":ikaria_lib"],
@@ -240,7 +236,7 @@ configure_make(
     lib_source = "@curl_source//:all_srcs",
     env = {
         "CPPFLAGS": "-I$$EXT_BUILD_DEPS/include",
-        "LIBS": "-lstdc++ -ldl -lpthread",
+        "LIBS": "-lstdc++ -ldl",
         "CC": "$(CC)",
         "CXX": "$(CC)",
         "AR": "$(AR)",

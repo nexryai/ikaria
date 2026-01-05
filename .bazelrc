@@ -55,8 +55,10 @@ build:native --linkopt=-fno-sanitize=vptr
 build:native --copt=-frtti
 
 build:wasm --platforms=//:wasm_platform
-build:wasm --copt=-fsanitize=address,undefined
-build:wasm --linkopt=-fsanitize=address,undefined
+build:wasm --copt=-fsanitize=undefined
+build:wasm --linkopt=-fsanitize=undefined
+build:wasm --linkopt=-sSAFE_HEAP=1
+build:wasm --linkopt=-sSTACK_OVERFLOW_CHECK=2
 build:wasm --linkopt=-sASSERTIONS=1
 
 build:native --platforms=//:host_platform

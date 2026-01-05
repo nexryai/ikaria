@@ -31,6 +31,7 @@ configure_make(
         "--without-python",
         "--without-zlib",
         "--without-lzma",
+        "--without-zstd",
     ],
     env = {
         "AR": "llvm-ar-20",
@@ -52,6 +53,13 @@ cc_library(
         "@boringssl_source//:ssl",
         "@boringssl_source//:crypto",
     ],
+    env = select({
+        "@platforms//cpu:wasm32": {},
+        "//conditions:default": {
+            "AR": "llvm-ar-20",
+            "NM": "llvm-nm-20",
+        },
+    }),
     copts = ["-fno-sanitize=cfi-icall"],
     defines = ["OPENSSL_NO_ASM"],
     visibility = ["//visibility:public"],
@@ -231,6 +239,7 @@ configure_make(
         "--with-openssl",
         "--with-pic",
         "--without-libpsl",
+        "--without-zstd",
         "--disable-ldap",
         "--disable-rtsp",
         "--disable-proxy",

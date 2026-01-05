@@ -69,7 +69,6 @@ configure_make(
     }),
     configure_options = [
         "--disable-debug",
-        "--disable-pthread",
         "--disable-x86asm",
         "--disable-inline-asm",
         "--disable-stripping",

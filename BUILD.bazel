@@ -53,13 +53,6 @@ cc_library(
         "@boringssl_source//:ssl",
         "@boringssl_source//:crypto",
     ],
-    env = select({
-        "@platforms//cpu:wasm32": {},
-        "//conditions:default": {
-            "AR": "llvm-ar-20",
-            "NM": "llvm-nm-20",
-        },
-    }),
     copts = ["-fno-sanitize=cfi-icall"],
     defines = ["OPENSSL_NO_ASM"],
     visibility = ["//visibility:public"],

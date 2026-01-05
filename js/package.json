@@ -12,7 +12,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "cp -f ../bazel-bin/*.wasm ./src && cp -f ../bazel-bin/*.js ./src && rm -rf dist && tsc && cp src/ikaria.wasm dist/ && pnpm minify",
+    "build": "rm -rf dist && tsc && pnpm minify",
     "minify": "for f in dist/*.js; do terser \"$f\" -o \"$f\" --compress --mangle --module; done"
   },
   "devDependencies": {

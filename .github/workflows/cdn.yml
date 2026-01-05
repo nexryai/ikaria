@@ -1,4 +1,4 @@
-name: Demo pages deploy CI
+name: Cloud CDN deploy CI
 on:
   push:
     branches: ["nightly"]
@@ -39,24 +39,16 @@ jobs:
       - name: Build with bazel
         run: bazel build --config=wasm //:ikaria_js
 
-      - name: Install dependencies (js)
-        working-directory: js
+      - name: Install dependencies
+        working-directory: cdn
         run: pnpm install
 
-      - name: Install dependencies (demo)
-        working-directory: demo
-        run: pnpm install
-
-      - name: Bundle with Vite
-        working-directory: js
-        run: pnpm build
-
-      - name: Build demo pages with Vite
-        working-directory: demo
+      - name: Build with tsc
+        working-directory: cdn
         run: pnpm build
 
       - name: Upload artifact
-        working-directory: demo
+        working-directory: cdn
         run: pnpm run deploy
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

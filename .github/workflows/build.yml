@@ -37,9 +37,9 @@ jobs:
         run: bazel build --config=wasm //:ikaria_js
 
       - name: Install dependencies
-        working-directory: js
+        working-directory: cdn
         run: pnpm install
 
-      - name: Bundle with Vite
-        working-directory: js
+      - name: Build with tsc
+        working-directory: cdn
         run: pnpm build

@@ -1,0 +1,16 @@
+{
+  "name": "ikaria-cloud-cdn",
+  "version": "0.3.0",
+  "type": "module",
+  "scripts": {
+    "build": "cp -f ../bazel-bin/*.wasm ./src && cp -f ../bazel-bin/*.js ./src && rm -rf dist && tsc && cp src/ikaria.wasm dist/ && pnpm minify && cp src/_headers dist/",
+    "minify": "for f in dist/*.js; do terser \"$f\" -o \"$f\" --compress --mangle --module; done",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "terser": "^5.44.1",
+    "typescript": "^5.8.3",
+    "wrangler": "^4.54.0"
+  }
+}

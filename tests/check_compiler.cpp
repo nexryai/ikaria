@@ -4,7 +4,7 @@
 #include <cctype>
 #include <string>
 
-TEST(CompilerCheck, IsGCC) {
+TEST(CompilerCheck, IsNotGCC) {
 #ifdef defined(__GNUC__)
     FAIL() << "GCC is not allowed for testing.";
 #else

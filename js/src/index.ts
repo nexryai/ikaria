@@ -1,4 +1,13 @@
-const browserWorker = new window.Worker(new URL("./worker-browser", import.meta.url), { type: 'module' });
+const cdnBase = "https://ikaria-cloud-cdn.nexryai.workers.dev";
+const workerUrl = `${cdnBase}/worker-browser.js`;
+
+const workerCode = `import "${workerUrl}";`;
+const dataUrl = `data:application/javascript;base64,${btoa(workerCode)}`;
+
+const browserWorker = new Worker(dataUrl, {
+  type: 'module',
+  credentials: 'omit'
+});
 
 type VideoInfo = {
     duration: number;

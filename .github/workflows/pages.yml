@@ -16,8 +16,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-        with:
-          lfs: true
 
       - name: Install packages
         run: |
@@ -28,8 +26,6 @@ jobs:
           sudo sh -c "echo 'deb-src https://apt.llvm.org/noble/ llvm-toolchain-noble-20 main' >> /etc/apt/sources.list"
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo apt-get update && sudo apt-get install -y clang-20 lld-20 llvm-20-linker-tools
-          curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o ffmpeg-static.tar.xz
-          mkdir ffmpeg-static && tar -xf ffmpeg-static.tar.xz -C ffmpeg-static --strip-components=1 && rm ffmpeg-static.tar.xz && sudo mv ffmpeg-static/ffmpeg /usr/local/bin && rm -rf ffmpeg-static.tar.xz ffmpeg-static
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

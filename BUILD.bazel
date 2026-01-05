@@ -156,6 +156,12 @@ configure_make(
     deps = [":libxml2", ":boringssl"],
 )
 
+filegroup(
+    name = "ffmpeg_bin",
+    srcs = [":ffmpeg_core"],
+    output_group = "ffmpeg",
+)
+
 cc_library(
     name = "ikaria_lib",
     srcs = glob(["src/*.cpp"]),
@@ -271,6 +277,10 @@ cc_test(
 cc_test(
     name = "test_dash_remuxer_with_ffmpeg",
     srcs = ["tests/dash_test_ffmpeg.cpp"],
+    data = [":ffmpeg_bin"],
+    env = {
+        "FFMPEG_PATH": "$(rootpath :ffmpeg_bin)",
+    },
     tags = ["exclusive"], # 他のテストと同時に実行されないようにする
     deps = [
         ":ikaria_lib",

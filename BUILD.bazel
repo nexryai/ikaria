@@ -52,6 +52,8 @@ cc_library(
         "@boringssl_source//:ssl",
         "@boringssl_source//:crypto",
     ],
+    copts = ["-fno-sanitize=cfi-icall"],
+    defines = ["OPENSSL_NO_ASM"],
     visibility = ["//visibility:public"],
 )
 
@@ -258,7 +260,6 @@ cc_library(
 cc_test(
     name = "test_dash_remuxer",
     srcs = ["tests/dash_test.cpp"],
-    data = glob(["tests/test_data/*"]),
     tags = ["exclusive"],
     deps = [
         ":ikaria_lib",
@@ -270,7 +271,6 @@ cc_test(
 cc_test(
     name = "test_dash_remuxer_with_ffmpeg",
     srcs = ["tests/dash_test_ffmpeg.cpp"],
-    data = glob(["tests/test_data/*"]),
     tags = ["exclusive"], # 他のテストと同時に実行されないようにする
     deps = [
         ":ikaria_lib",

@@ -27,6 +27,7 @@ build:native --copt=-fstack-clash-protection
 build:native --copt=-D_FORTIFY_SOURCE=3
 build:native --copt=-fsanitize=address,bounds,undefined
 build:native --linkopt=-fsanitize=address,undefined
+build --copt=-DOPENSSL_NO_ASM
 
 # Control Flow Integrity
 # glist.c:949:7: runtime error: control flow integrity check for type 'void (void *, void *)' failed during indirect function call
@@ -45,6 +46,9 @@ build:native --copt=-fsanitize=cfi
 build:native --linkopt=-fsanitize=cfi
 build:native --copt=-fno-sanitize-trap=cfi
 build:native --copt=-fvisibility=default
+
+# external/+_repo_rules+boringssl_source/crypto/bio/bio.cc:44:37: runtime error: control flow integrity check for type 'int (bio_st *)' failed during indirect function call
+build --per_file_copt=boringssl_source/.*\.c(c)?$@-fno-sanitize=cfi-icall
 
 build:native --copt=-fno-sanitize=vptr
 build:native --linkopt=-fno-sanitize=vptr

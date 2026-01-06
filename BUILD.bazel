@@ -173,9 +173,8 @@ cc_library(
         "@platforms//cpu:wasm32": [
             "-sASYNCIFY=2",
             "-sUSE_PTHREADS=0",
-            "-sNO_DISABLE_EXCEPTION_CATCHING",
             "-O3",
-            "-fexceptions",
+            "-fwasm-exceptions",
         ],
         "//conditions:default": ["-O3"],
     }),
@@ -185,6 +184,7 @@ cc_library(
         "@platforms//cpu:wasm32": [
             "-sASYNCIFY=2",
             "-sUSE_PTHREADS=0",
+            "-fwasm-exceptions",
         ],
         "//conditions:default": [
             "-lz",
@@ -199,13 +199,13 @@ cc_binary(
     linkopts = [
         "-O3",
         "--bind",
-        "-sNO_DISABLE_EXCEPTION_CATCHING",
         "-sINITIAL_MEMORY=399966208",
         "-sEXPORT_ES6=1",
         "-sWASMFS",
         "-sASYNCIFY=2",
         "-sUSE_PTHREADS=0",
         "-sASSERTIONS",
+        "-fwasm-exceptions",
         # "-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency",
         "-o ikaria.js",
     ],

@@ -175,6 +175,7 @@ cc_library(
             "-sUSE_PTHREADS=0",
             "-O3",
             "-fwasm-exceptions",
+            "-fexceptions",
         ],
         "//conditions:default": ["-O3"],
     }),

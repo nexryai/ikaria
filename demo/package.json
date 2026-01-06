@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && cp -f ../js/dist/*.wasm dist/assets",
+    "build": "tsc -b && vite build",
     "deploy": "wrangler deploy",
     "lint": "eslint .",
     "preview": "vite preview"

@@ -2,8 +2,8 @@ load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 load("@emsdk//emscripten_toolchain:wasm_rules.bzl", "wasm_cc_binary")
 
-COMMON_FLAGS = "-O3"
-LDFLAGS_COMMON = "-O3"
+COMMON_FLAGS = "-s USE_PTHREADS=0 -O3"
+LDFLAGS_COMMON = "-s USE_PTHREADS=0 -O3"
 
 platform(
     name = "wasm_platform",
@@ -86,6 +86,7 @@ configure_make(
         "--enable-demuxer=dash,mov,matroska,mp3,webm",
         "--enable-muxer=dash,mp4,webm",
         "--disable-gpl",
+        "--host-cc=clang-20",
     ] + select({
         "@platforms//cpu:wasm32": [
             "--disable-programs",
@@ -121,7 +122,7 @@ configure_make(
             "--as=$(CC)",
             "--objcc=$(CC)",
             "--dep-cc=$(CC)",
-            "--extra-cflags='-fsanitize=address,undefined -fno-sanitize-trap=all'",
+            "--extra-cflags='-fsanitize=address,undefined'",
             "--extra-ldflags='-fsanitize=address,undefined'",
             "--extra-cflags='-I$$EXT_BUILD_DEPS/include -I$$EXT_BUILD_DEPS/libxml2/include/libxml2 -fuse-ld=lld-20'",
             "--extra-ldflags='-L$$EXT_BUILD_DEPS/lib -L$$EXT_BUILD_DEPS/libxml2/lib -fuse-ld=lld-20 -lstdc++'",
@@ -171,6 +172,7 @@ cc_library(
     copts = select({
         "@platforms//cpu:wasm32": [
             "-sJSPI",
+            "-sUSE_PTHREADS=0",
             "-sNO_DISABLE_EXCEPTION_CATCHING",
             "-O3",
             "-fexceptions",
@@ -180,7 +182,9 @@ cc_library(
     includes = ["src"],
     deps = [":ffmpeg_core"],
     linkopts = select({
-        "@platforms//cpu:wasm32": [],
+        "@platforms//cpu:wasm32": [
+            "-sUSE_PTHREADS=0",
+        ],
         "//conditions:default": [
             "-lz",
             "-lm",
@@ -196,11 +200,9 @@ cc_binary(
         "--bind",
         "-sNO_DISABLE_EXCEPTION_CATCHING",
         "-sINITIAL_MEMORY=399966208",
-        "-sALLOW_MEMORY_GROWTH=1",
         "-sEXPORT_ES6=1",
         "-sWASMFS",
         "-sASSERTIONS",
-        "-sJSPI",
         # "-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency",
         "-o ikaria.js",
     ],

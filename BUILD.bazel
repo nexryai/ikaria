@@ -201,6 +201,7 @@ cc_binary(
         "-sEXPORT_ES6=1",
         "-sWASMFS",
         "-sASYNCIFY=2",
+        "-sJSPI_EXPORTS=DashRemuxer.process",
         "-sUSE_PTHREADS=0",
         "-sASSERTIONS",
         # "-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency",

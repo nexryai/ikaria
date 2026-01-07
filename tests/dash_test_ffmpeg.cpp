@@ -70,7 +70,9 @@ TEST_P(DashRemuxerFFmpegTest, CompareWithFFmpegCommand) {
     const std::string ffOutputPath = "real_ffmpeg_out.mpd";
 
     DashRemuxer remuxer;
-    remuxer.process(inputLocalPath, myOutputPath);
+    const int result = remuxer.process(inputLocalPath, myOutputPath);
+    ASSERT_EQ(result, 0);
+
     auto myData = get_stream_data(myOutputPath);
 
     std::string format = param.url.substr(param.url.find_last_of('.') + 1);

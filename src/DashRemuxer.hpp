@@ -4,7 +4,7 @@
 class DashRemuxer {
 public:
     DashRemuxer() = default;
-    void process(std::string inputPath, std::string outputPath, bool use_opfs = false);
+    int process(std::string inputPath, std::string outputPath, bool use_opfs = false);
 
 private:
     void init_opfs();

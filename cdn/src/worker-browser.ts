@@ -22,9 +22,13 @@ self.onmessage = async (e: MessageEvent) => {
 
                 try {
                     // @ts-ignore
-                    remuxer.process(file, `/out/manifest.mpd`, true)
-                    console.log("Done!");
-                    postMessage({ result: "ok" });
+                    const result = remuxer.process(file, `/out/manifest.mpd`, true)
+                    if (result !== 0) {
+                        postMessage({ error: "processor returned non-0 code" });
+                    } else {
+                        console.log("Done!");
+                        postMessage({ result: "ok" });
+                    }
                 } finally {
                     remuxer.delete();
                 }

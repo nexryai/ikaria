@@ -174,7 +174,6 @@ cc_library(
             "-sASYNCIFY=2",
             "-sUSE_PTHREADS=0",
             "-O3",
-            "-fwasm-exceptions",
         ],
         "//conditions:default": ["-O3"],
     }),
@@ -184,7 +183,6 @@ cc_library(
         "@platforms//cpu:wasm32": [
             "-sASYNCIFY=2",
             "-sUSE_PTHREADS=0",
-            "-fwasm-exceptions",
         ],
         "//conditions:default": [
             "-lz",
@@ -205,7 +203,6 @@ cc_binary(
         "-sASYNCIFY=2",
         "-sUSE_PTHREADS=0",
         "-sASSERTIONS",
-        "-fwasm-exceptions",
         # "-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency",
         "-o ikaria.js",
     ],

@@ -8,7 +8,6 @@ extern "C" {
 }
 
 #include <filesystem>
-#include <stdexcept>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/wasmfs.h>
@@ -32,7 +31,7 @@ void DashRemuxer::init_opfs() {
     }
 }
 
-void DashRemuxer::process(std::string inputPath, std::string outputPath, bool use_opfs) {
+int DashRemuxer::process(std::string inputPath, std::string outputPath, bool use_opfs) {
     std::cout << "[ikaria] called process" << std::endl;
 
     const std::string format = inputPath.substr(inputPath.find_last_of('.') + 1);
@@ -52,27 +51,33 @@ void DashRemuxer::process(std::string inputPath, std::string outputPath, bool us
     if (ret < 0) {
         char errbuf[256];
         av_strerror(ret, errbuf, sizeof(errbuf));
-
-        std::string msg = "Could not open input: " + inputPath + " (Error: " + errbuf + ", Code: " + std::to_string(ret) + ")";
-        throw std::runtime_error(msg);
+        std::cerr << "[ikaria] Could not open input: " << inputPath << " (Error: " << errbuf << ", Code: " << ret << ")" << std::endl;
+        return -1;
     }
 
     FormatContextPtr ifmt_ctx(ifmt_raw);
 
     if (avformat_find_stream_info(ifmt_ctx.get(), nullptr) < 0) {
-        throw std::runtime_error("Failed to retrieve stream info");
+        std::cerr << "[ikaria] Failed to retrieve stream info" << std::endl;
+        return -1;
     }
 
     AVFormatContext* ofmt_raw = nullptr;
     avformat_alloc_output_context2(&ofmt_raw, nullptr, "dash", finalOutputPath.c_str());
     if (!ofmt_raw) {
-        throw std::runtime_error("Could not create output context");
+        std::cerr << "[ikaria] Could not create output context" << std::endl;
+        return -1;
     }
 
     FormatContextPtr ofmt_ctx(ofmt_raw);
 
     for (unsigned int i = 0; i < ifmt_ctx->nb_streams; i++) {
-        AVStream *in_s = ifmt_ctx->streams[i], *out_s = avformat_new_stream(ofmt_ctx.get(), nullptr);
+        AVStream *in_s = ifmt_ctx->streams[i];
+        AVStream *out_s = avformat_new_stream(ofmt_ctx.get(), nullptr);
+        if (!out_s) {
+            std::cerr << "[ikaria] Failed to allocate output stream" << std::endl;
+            return -1;
+        }
         avcodec_parameters_copy(out_s->codecpar, in_s->codecpar);
         out_s->codecpar->codec_tag = 0;
     }
@@ -86,14 +91,16 @@ void DashRemuxer::process(std::string inputPath, std::string outputPath, bool us
 
     if (!(ofmt_ctx->oformat->flags & AVFMT_NOFILE)) {
         if (avio_open(&ofmt_ctx->pb, finalOutputPath.c_str(), AVIO_FLAG_WRITE) < 0) {
-            throw std::runtime_error("Could not open output file");
+            std::cerr << "[ikaria] Could not open output file" << std::endl;
+            return -1;
         }
     }
 
     AVDictionary* tmp_opts = opts.release();
     if (avformat_write_header(ofmt_ctx.get(), &tmp_opts) < 0) {
         av_dict_free(&tmp_opts);
-        throw std::runtime_error("Error writing header");
+        std::cerr << "[ikaria] Error writing header" << std::endl;
+        return -1;
     }
 
     std::cout << "[ikaria] avformat_write_header() --> OK" << std::endl;
@@ -101,11 +108,12 @@ void DashRemuxer::process(std::string inputPath, std::string outputPath, bool us
     while (true) {
         PacketPtr pkt(av_packet_alloc());
         if (!pkt) {
-            throw std::runtime_error("Could not allocate packet");
+            std::cerr << "[ikaria] Could not allocate packet" << std::endl;
+            return -1;
         }
 
         if (av_read_frame(ifmt_ctx.get(), pkt.get()) < 0) {
-            break; // ファイル末尾、またはエラー
+            break;
         }
 
         AVStream *in_s = ifmt_ctx->streams[pkt->stream_index];
@@ -115,14 +123,12 @@ void DashRemuxer::process(std::string inputPath, std::string outputPath, bool us
         pkt->pos = -1;
 
         if (av_interleaved_write_frame(ofmt_ctx.get(), pkt.get()) < 0) {
-            break;
+            std::cerr << "[ikaria] Error while muxing packet" << std::endl;
+            return -1;
         }
-
-        pkt.reset();
     }
 
     av_write_trailer(ofmt_ctx.get());
-    if (!(ofmt_ctx->oformat->flags & AVFMT_NOFILE)) {
-        avio_closep(&ofmt_ctx->pb);
-    }
+
+    return 0;
 }

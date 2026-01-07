@@ -25,7 +25,8 @@ TEST_P(DashRemuxerTest, FlexibleRemuxTest) {
     ASSERT_FALSE(original.video.empty());
 
     DashRemuxer remuxer;
-    ASSERT_NO_THROW(remuxer.process(inputPath, outputPath));
+    const int result = remuxer.process(inputPath, outputPath);
+    ASSERT_EQ(result, 0);
 
     auto remuxed = get_stream_data(outputPath);
     verify_stream(original.video, remuxed.video, "Video", param.video_tolerance, param.allowed_pts_diff, param.url.substr(param.url.find_last_of('.') + 1));

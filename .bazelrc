@@ -56,9 +56,7 @@ build:native --copt=-frtti
 
 build:wasm --platforms=//:wasm_platform
 build:wasm --copt=-fsanitize=address,undefined
-build:wasm --copt=-fwasm-exceptions
 build:wasm --linkopt=-fsanitize=address,undefined
-build:wasm --linkopt=-fwasm-exceptions
 build:wasm --linkopt=-sASSERTIONS=1
 
 build:native --platforms=//:host_platform

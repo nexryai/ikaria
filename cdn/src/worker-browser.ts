@@ -22,7 +22,7 @@ self.onmessage = async (e: MessageEvent) => {
 
                 try {
                     // @ts-ignore
-                    const result = remuxer.process(file, `/out/manifest.mpd`, true)
+                    const result = await remuxer.process(file, `/out/manifest.mpd`, true)
                     if (result !== 0) {
                         postMessage({ error: "processor returned non-0 code" });
                     } else {

@@ -25,6 +25,7 @@ void DashRemuxer::init_opfs() {
     if (!initialized) {
         #ifdef __EMSCRIPTEN__
         backend_t opfs = wasmfs_create_opfs_backend();
+        std::cout << "[ikaria] wasmfs_create_opfs_backend() --> OK" << std::endl;
         wasmfs_create_directory("/opfs", 0755, opfs);
         initialized = true;
         #endif

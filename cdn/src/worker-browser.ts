@@ -8,6 +8,7 @@ self.onmessage = async (e: MessageEvent) => {
         const type = e.data[0];
         const file = e.data[1];
 
+        // @ts-ignore
         const ikaria = await WebAssembly.promising(Ikaria());
 
         switch (type) {

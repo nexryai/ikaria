@@ -8,6 +8,6 @@ using namespace emscripten;
 EMSCRIPTEN_BINDINGS(dash_remuxer_module) {
     class_<DashRemuxer>("DashRemuxer")
         .constructor<>()
-        .function("process", &DashRemuxer::process, async());
+        .function("process", &DashRemuxer::process);
 }
 #endif

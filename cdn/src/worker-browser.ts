@@ -2,8 +2,7 @@ import Ikaria from './ikaria.js';
 
 console.log('Worker: Starting worker');
 
-// @ts-ignore
-const ikariaPromise = WebAssembly.promising(Ikaria());
+const ikariaPromise = Ikaria();
 
 self.onmessage = async (e: MessageEvent) => {
     try {

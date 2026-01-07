@@ -201,7 +201,7 @@ cc_binary(
         "-sEXPORT_ES6=1",
         "-sWASMFS",
         "-sASYNCIFY=2",
-        "-sJSPI_EXPORTS=['DashRemuxer.process']",
+        "-sJSPI_EXPORTS='DashRemuxer.process,setup_fs,create_5k_files_and_directories_simulating_wordpress_file_structure,read_file,write_file,list_files,_wasmfs_opfs_init_root_directory'",
         "-sUSE_PTHREADS=0",
         "-sASSERTIONS",
         # "-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency",

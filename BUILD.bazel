@@ -173,6 +173,8 @@ cc_library(
         "@platforms//cpu:wasm32": [
             "-sASYNCIFY=2",
             "-sUSE_PTHREADS=0",
+            "-sENVIRONMENT=web,worker",
+            "-sJSPI_EXPORTS=['_wasmfs_opfs_init_root_directory']",
             "-O3",
         ],
         "//conditions:default": ["-O3"],
@@ -183,6 +185,8 @@ cc_library(
         "@platforms//cpu:wasm32": [
             "-sASYNCIFY=2",
             "-sUSE_PTHREADS=0",
+            "-sENVIRONMENT=web,worker",
+            "-sJSPI_EXPORTS=['_wasmfs_opfs_init_root_directory']",
         ],
         "//conditions:default": [
             "-lz",
@@ -201,6 +205,7 @@ cc_binary(
         "-sEXPORT_ES6=1",
         "-sWASMFS",
         "-sASYNCIFY=2",
+        "-sENVIRONMENT=web,worker",
         "-sJSPI_EXPORTS=['_wasmfs_opfs_init_root_directory']",
         "-sUSE_PTHREADS=0",
         "-sASSERTIONS",

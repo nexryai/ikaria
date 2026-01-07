@@ -175,6 +175,7 @@ cc_library(
             "-sUSE_PTHREADS=0",
             "-sENVIRONMENT=web,worker",
             "-sJSPI_EXPORTS=['_wasmfs_opfs_init_root_directory']",
+            "-sASYNCIFY_IGNORE_INDIRECT=1",
             "-O3",
         ],
         "//conditions:default": ["-O3"],
@@ -187,6 +188,7 @@ cc_library(
             "-sUSE_PTHREADS=0",
             "-sENVIRONMENT=web,worker",
             "-sJSPI_EXPORTS=['_wasmfs_opfs_init_root_directory']",
+            "-sASYNCIFY_IGNORE_INDIRECT=1",
         ],
         "//conditions:default": [
             "-lz",
@@ -207,6 +209,7 @@ cc_binary(
         "-sASYNCIFY=2",
         "-sENVIRONMENT=web,worker",
         "-sJSPI_EXPORTS=['_wasmfs_opfs_init_root_directory']",
+        "-sASYNCIFY_IGNORE_INDIRECT=1",
         "-sUSE_PTHREADS=0",
         "-sASSERTIONS",
         # "-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency",

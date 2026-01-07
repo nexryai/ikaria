@@ -2,15 +2,17 @@ import Ikaria from './ikaria.js';
 
 console.log('Worker: Starting worker');
 
+// @ts-ignore
+const ikariaPromise = WebAssembly.promising(Ikaria());
+
 self.onmessage = async (e: MessageEvent) => {
     try {
         console.log('Worker: Received message', e.data);
         const type = e.data[0];
         const file = e.data[1];
 
-        // @ts-ignore
-        const ikaria = await WebAssembly.promising(Ikaria());
-
+        const ikaria = await ikariaPromise;
+        
         switch (type) {
             case 'read_file':
 
@@ -38,6 +40,7 @@ self.onmessage = async (e: MessageEvent) => {
                 break;
         }
     } catch (error: any) {
+        console.error(error);
         postMessage({ error: error.message });
     }
 }

@@ -41,7 +41,7 @@ int DashRemuxer::process(std::string inputPath, std::string outputPath, bool use
 
     std::string finalOutputPath = outputPath;
     if (use_opfs) {
-        init_opfs();
+        // init_opfs();
         finalOutputPath = "/opfs" + outputPath;
     }
 

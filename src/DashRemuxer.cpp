@@ -45,7 +45,7 @@ int DashRemuxer::process(std::string inputPath, std::string outputPath, bool use
         finalOutputPath = "/opfs" + outputPath;
     }
 
-    ensure_directory(finalOutputPath);
+    // ensure_directory(finalOutputPath);
     std::cout << "[ikaria] ensure_directory() --> OK" << std::endl;
 
     AVFormatContext* ifmt_raw = nullptr;

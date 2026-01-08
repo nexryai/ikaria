@@ -174,7 +174,6 @@ cc_library(
             "-sASYNCIFY=2",
             "-sUSE_PTHREADS=0",
             "-sENVIRONMENT=web,worker",
-            "-sJSPI_EXPORTS=['_wasmfs_opfs_init_root_directory']",
             "-sASYNCIFY_IGNORE_INDIRECT=1",
             "-O3",
         ],
@@ -187,7 +186,6 @@ cc_library(
             "-sASYNCIFY=2",
             "-sUSE_PTHREADS=0",
             "-sENVIRONMENT=web,worker",
-            "-sJSPI_EXPORTS=['_wasmfs_opfs_init_root_directory']",
             "-sASYNCIFY_IGNORE_INDIRECT=1",
         ],
         "//conditions:default": [
@@ -208,7 +206,6 @@ cc_binary(
         "-sWASMFS",
         "-sASYNCIFY=2",
         "-sENVIRONMENT=web,worker",
-        "-sJSPI_EXPORTS=['_wasmfs_opfs_init_root_directory']",
         "-sASYNCIFY_IGNORE_INDIRECT=1",
         "-sUSE_PTHREADS=0",
         "-sASSERTIONS",

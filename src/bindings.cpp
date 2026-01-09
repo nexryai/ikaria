@@ -7,10 +7,13 @@
 
 using namespace emscripten;
 
+int remuxToDash(std::string inputPath, std::string outputPath) {
+    DashRemuxer remuxer;
+    return remuxer.process(inputPath, outputPath, true);
+}
+
 EMSCRIPTEN_BINDINGS(dash_remuxer_module) {
-    class_<DashRemuxer>("DashRemuxer")
-        .constructor<>()
-        .function("process", &DashRemuxer::process, async());
+    function("remuxToDash", &remuxToDash, async());
 }
 
 int main() {
@@ -18,6 +21,6 @@ int main() {
     std::cout << "[ikaria] binding.cpp: wasmfs_create_opfs_backend() --> OK" << std::endl;
     wasmfs_create_directory("/opfs", 0755, opfs);
     std::cout << "[ikaria] binding.cpp: wasmfs_create_directory() --> OK" << std::endl;
+    return 0;
 }
-
 #endif

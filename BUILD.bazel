@@ -206,7 +206,7 @@ cc_binary(
         "-sEXPORT_ES6=1",
         "-sWASMFS",
         "-sASYNCIFY=2",
-        "-sJSPI_EXPORTS=['process']",
+        "-sJSPI_EXPORTS=['remuxToDash']",
         "-sENVIRONMENT=web,worker",
         "-sASYNCIFY_IGNORE_INDIRECT=1",
         "-sNO_EXIT_RUNTIME=1",

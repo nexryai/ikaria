@@ -16,13 +16,13 @@ self.onmessage = async (e: MessageEvent) => {
             case 'remux_to_dash':
                 console.log("Starting....")
 
-                let result: number | undefined;
-
-                const ikaria = await Ikaria({
-                    arguments: ['remuxToDash', file, '/out/manifest.mpd'],
-                    onExit: (code: number) => {
-                        result = code;
-                    }
+                const result = await new Promise<number>((resolve, reject) => {
+                    Ikaria({
+                        arguments: ['remuxToDash', file, '/out/manifest.mpd'],
+                        onExit: (code: number) => {
+                            resolve(code);
+                        }
+                    }).catch(reject);
                 });
 
                 if (result !== 0) {

@@ -174,7 +174,6 @@ cc_library(
             "-sASYNCIFY=2",
             "-sUSE_PTHREADS=0",
             "-sENVIRONMENT=web,worker",
-            "-sMALLOC=mimalloc",
             "-O3",
         ],
         "//conditions:default": ["-O3"],
@@ -184,7 +183,6 @@ cc_library(
     linkopts = select({
         "@platforms//cpu:wasm32": [
             "-sUSE_PTHREADS=0",
-            "-sMALLOC=mimalloc",
         ],
         "//conditions:default": [
             "-lz",
@@ -206,7 +204,6 @@ cc_binary(
         "-sASYNCIFY=2",
         "-sENVIRONMENT=web,worker",
         "-sUSE_PTHREADS=0",
-        "-sMALLOC=mimalloc",
         "-sASSERTIONS",
         "-o ikaria.js",
     ],

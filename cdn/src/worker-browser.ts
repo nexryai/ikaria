@@ -20,15 +20,13 @@ self.onmessage = async (e: MessageEvent) => {
             case 'remux_to_dash':
                 console.log("Starting....")
 
-                try {
-                    // @ts-ignore
-                    const result = await ikaria.remuxToDash(file, `/out/manifest.mpd`);
-                    if (result !== 0) {
-                        postMessage({ error: "processor returned non-0 code" });
-                    } else {
-                        console.log("Done!");
-                        postMessage({ result: "ok" });
-                    }
+                // @ts-ignore
+                const result = await ikaria.remuxToDash(file, `/out/manifest.mpd`);
+                if (result !== 0) {
+                    postMessage({ error: "processor returned non-0 code" });
+                } else {
+                    console.log("Done!");
+                    postMessage({ result: "ok" });
                 }
 
             default:

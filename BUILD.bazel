@@ -171,6 +171,7 @@ cc_library(
     alwayslink = 1,
     copts = select({
         "@platforms//cpu:wasm32": [
+            "-lembind",
             "-sASYNCIFY=2",
             "-sUSE_PTHREADS=0",
             "-sENVIRONMENT=web,worker",
@@ -184,6 +185,7 @@ cc_library(
     deps = [":ffmpeg_core"],
     linkopts = select({
         "@platforms//cpu:wasm32": [
+            "-lembind",
             "-sASYNCIFY=2",
             "-sUSE_PTHREADS=0",
             "-sENVIRONMENT=web,worker",
@@ -201,6 +203,7 @@ cc_binary(
     name = "ikaria",
     linkopts = [
         "-O3",
+        "-lembind",
         "--bind",
         "-sINITIAL_MEMORY=399966208",
         "-sEXPORT_ES6=1",

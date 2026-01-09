@@ -174,8 +174,7 @@ cc_library(
             "-sASYNCIFY=2",
             "-sUSE_PTHREADS=0",
             "-sENVIRONMENT=web,worker",
-            "-sASYNCIFY_IGNORE_INDIRECT=1",
-            "-O2",
+            "-O3",
         ],
         "//conditions:default": ["-O3"],
     }),
@@ -183,10 +182,7 @@ cc_library(
     deps = [":ffmpeg_core"],
     linkopts = select({
         "@platforms//cpu:wasm32": [
-            "-sASYNCIFY=2",
             "-sUSE_PTHREADS=0",
-            "-sENVIRONMENT=web,worker",
-            "-sASYNCIFY_IGNORE_INDIRECT=1",
         ],
         "//conditions:default": [
             "-lz",
@@ -199,18 +195,16 @@ cc_library(
 cc_binary(
     name = "ikaria",
     linkopts = [
-        "-O2",
+        "-O3",
         "--bind",
         "-sINITIAL_MEMORY=399966208",
+        "-sALLOW_MEMORY_GROWTH",
         "-sEXPORT_ES6=1",
         "-sWASMFS",
         "-sASYNCIFY=2",
-        "-sJSPI_EXPORTS=['remuxToDash']",
         "-sENVIRONMENT=web,worker",
-        "-sASYNCIFY_IGNORE_INDIRECT=1",
         "-sUSE_PTHREADS=0",
         "-sASSERTIONS",
-        # "-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency",
         "-o ikaria.js",
     ],
     deps = [":ikaria_lib"],

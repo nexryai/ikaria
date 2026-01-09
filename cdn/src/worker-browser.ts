@@ -19,7 +19,7 @@ self.onmessage = async (e: MessageEvent) => {
                 let result: number | undefined;
 
                 const ikaria = await Ikaria({
-                    arguments: ['ikaria', 'remuxToDash', file, '/out/manifest.mpd'],
+                    arguments: ['remuxToDash', file, '/out/manifest.mpd'],
                     onExit: (code: number) => {
                         result = code;
                     }

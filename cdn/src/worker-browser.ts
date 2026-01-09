@@ -2,15 +2,11 @@ import Ikaria from './ikaria.js';
 
 console.log('Worker: Starting worker');
 
-const ikariaPromise = Ikaria();
-
 self.onmessage = async (e: MessageEvent) => {
     try {
         console.log('Worker: Received message', e.data);
         const type = e.data[0];
         const file = e.data[1];
-
-        const ikaria = await ikariaPromise;
 
         switch (type) {
             case 'read_file':
@@ -20,8 +16,11 @@ self.onmessage = async (e: MessageEvent) => {
             case 'remux_to_dash':
                 console.log("Starting....")
 
-                // @ts-ignore
-                const result = await ikaria.remuxToDash(file, `/out/manifest.mpd`);
+                const ikaria = await Ikaria({
+                    arguments: ['ikaria', 'remuxToDash', file, '/out/manifest.mpd']
+                });
+
+                const result = ikaria.getExitCode?.() || 0;
                 if (result !== 0) {
                     postMessage({ error: "processor returned non-0 code" });
                 } else {

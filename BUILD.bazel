@@ -176,7 +176,7 @@ cc_library(
             "-sENVIRONMENT=web,worker",
             "-sASYNCIFY_IGNORE_INDIRECT=1",
             "-sNO_EXIT_RUNTIME=1",
-            "-O3",
+            "-O2",
         ],
         "//conditions:default": ["-O3"],
     }),
@@ -200,7 +200,7 @@ cc_library(
 cc_binary(
     name = "ikaria",
     linkopts = [
-        "-O3",
+        "-O2",
         "--bind",
         "-sINITIAL_MEMORY=399966208",
         "-sEXPORT_ES6=1",

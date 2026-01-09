@@ -15,7 +15,11 @@ int remuxToDash(std::string inputPath, std::string outputPath) {
 
 int main(const int argc, const char** argv) {
     std::cout << "[ikaria] binding.cpp: argc=" << argc << std::endl;
-    if(argc > 4) {
+    for(int i = 0; i < argc; i++) {
+        std::cout << "[ikaria] binding.cpp: argv[" << i << "]: " << argv[i] << std::endl;
+    }
+    
+    if(argc < 4) {
         std::cerr << "[ikaria] binding.cpp: Invalid args" << std::endl;
         return -1;
     }

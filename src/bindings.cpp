@@ -14,8 +14,9 @@ int remuxToDash(std::string inputPath, std::string outputPath) {
 }
 
 int main(const int argc, const char** argv) {
+    std::cout << "[ikaria] binding.cpp: argc=" << argc << std::endl;
     if(argc > 4) {
-        std::cerr << "Invalid args" << std::endl;
+        std::cerr << "[ikaria] binding.cpp: Invalid args" << std::endl;
         return -1;
     }
 
@@ -35,7 +36,7 @@ int main(const int argc, const char** argv) {
     if (command == "remuxToDash") {
         result = remuxToDash(inputPath, outputPath);
     } else {
-        std::cerr << "Unknown command: " << command << std::endl;
+        std::cerr << "[ikaria] binding.cpp: Unknown command: " << command << std::endl;
         result = -1;
     }
 

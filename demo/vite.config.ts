@@ -7,8 +7,8 @@ export default defineConfig({
     headers: {
       // 'Cross-Origin-Opener-Policy': 'same-origin',
       // 'Cross-Origin-Embedder-Policy': 'require-corp',
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+      // "Access-Control-Allow-Origin": "*",
+      // "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
     },
     fs: {
       allow: [
@@ -24,8 +24,8 @@ export default defineConfig({
     headers: {
       // 'Cross-Origin-Opener-Policy': 'same-origin',
       // 'Cross-Origin-Embedder-Policy': 'require-corp',
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+      // "Access-Control-Allow-Origin": "*",
+      // "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
     },
   },
 })

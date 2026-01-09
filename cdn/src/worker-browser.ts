@@ -16,11 +16,15 @@ self.onmessage = async (e: MessageEvent) => {
             case 'remux_to_dash':
                 console.log("Starting....")
 
+                let result: number | undefined;
+
                 const ikaria = await Ikaria({
-                    arguments: ['ikaria', 'remuxToDash', file, '/out/manifest.mpd']
+                    arguments: ['ikaria', 'remuxToDash', file, '/out/manifest.mpd'],
+                    onExit: (code: number) => {
+                        result = code;
+                    }
                 });
 
-                const result = ikaria.getExitCode?.() || 0;
                 if (result !== 0) {
                     postMessage({ error: "processor returned non-0 code" });
                 } else {

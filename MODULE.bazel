@@ -30,8 +30,8 @@ http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "ht
 http_archive(
     name = "ffmpeg_source",
     build_file_content = 'filegroup(name = "all_srcs", srcs = glob(["**"]), visibility = ["//visibility:public"])',
-    strip_prefix = "ffmpeg-7.1.1",
-    urls = ["https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.gz"],
+    strip_prefix = "ffmpeg-8.0.1",
+    urls = ["https://ffmpeg.org/releases/ffmpeg-8.0.1.tar.gz"],
 )
 
 http_archive(

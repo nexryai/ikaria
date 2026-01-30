@@ -50,8 +50,8 @@ http_archive(
 http_archive(
     name = "curl_source",
     build_file_content = 'filegroup(name = "all_srcs", srcs = glob(["**"]), visibility = ["//visibility:public"])',
-    strip_prefix = "curl-8.17.0",
-    urls = ["https://github.com/curl/curl/releases/download/curl-8_17_0/curl-8.17.0.tar.gz"],
+    strip_prefix = "curl-8.18.0",
+    urls = ["https://github.com/curl/curl/releases/download/curl-8_18_0/curl-8.18.0.tar.gz"],
 )
 
 bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
